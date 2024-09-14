@@ -45,10 +45,10 @@ const PatientDashboard = () => {
   const iconStyle = { marginRight: '8px' };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#e0f7fa' }}>
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#e0f7fa', fontFamily: 'Roboto, sans-serif' }}>
       {isMenuOpen && (
         <div style={{ width: '250px', backgroundColor: '#1976d2', padding: '16px', color: 'white' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Patients</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '16px' }}>Patients</h2>
           {Object.entries(patientsData).map(([id, patient]) => (
             <button
               key={id}
@@ -63,7 +63,8 @@ const PatientDashboard = () => {
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                transition: 'background-color 0.3s ease'
+                transition: 'background-color 0.3s ease',
+                fontSize: '16px'
               }}
               onClick={() => setSelectedPatient(id)}
             >
@@ -99,9 +100,9 @@ const PatientDashboard = () => {
               <path d="M4 6H20V8H4V6ZM4 11H20V13H4V11ZM4 16H20V18H4V16Z" fill="white"/>
             </svg>
           </button>
-          <div style={{ marginTop: '60px' }}> {/* Margin to avoid overlap with the toggle button */}
+          <div style={{ marginTop: '40px' }}> {/* Margin to avoid overlap with the toggle button */}
             <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
-              <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>{patientData.name}</h2>
+              <h2 style={{ fontSize: '26px', marginBottom: '16px', fontWeight: '700' }}>{patientData.name}</h2>
               
               {/* Flexbox Container for the Buttons */}
               <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
@@ -115,7 +116,10 @@ const PatientDashboard = () => {
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    transition: 'background-color 0.3s ease'
+                    transition: 'background-color 0.3s ease',
+                    fontSize: '16px',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
                 >
                   <i className="fas fa-user" style={iconStyle}></i>
@@ -131,7 +135,10 @@ const PatientDashboard = () => {
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    transition: 'background-color 0.3s ease'
+                    transition: 'background-color 0.3s ease',
+                    fontSize: '16px',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
                 >
                   <i className="fas fa-file-medical" style={iconStyle}></i>
@@ -146,7 +153,10 @@ const PatientDashboard = () => {
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    transition: 'background-color 0.3s ease'
+                    transition: 'background-color 0.3s ease',
+                    fontSize: '16px',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
                 >
                   <i className="fas fa-stethoscope" style={iconStyle}></i>
@@ -155,27 +165,27 @@ const PatientDashboard = () => {
               </div>
               {activeTab === "personal-info" && (
                 <div style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '16px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
-                  <p>Age: {patientData.personalInfo.age}</p>
-                  <p>Gender: {patientData.personalInfo.gender}</p>
-                  <p>Contact: {patientData.personalInfo.contact}</p>
+                  <p style={{ fontSize: '16px' }}>Age: {patientData.personalInfo.age}</p>
+                  <p style={{ fontSize: '16px' }}>Gender: {patientData.personalInfo.gender}</p>
+                  <p style={{ fontSize: '16px' }}>Contact: {patientData.personalInfo.contact}</p>
                 </div>
               )}
               {activeTab === "medical-records" && (
                 <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ccc', borderRadius: '4px', padding: '16px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
                   {patientData.medicalRecords.map((record, index) => (
                     <div key={index} style={{ marginBottom: '16px' }}>
-                      <p>Date: {record.date}</p>
-                      <p>Condition: {record.condition}</p>
-                      <p>Treatment: {record.treatment}</p>
+                      <p style={{ fontSize: '16px' }}>Date: {record.date}</p>
+                      <p style={{ fontSize: '16px' }}>Condition: {record.condition}</p>
+                      <p style={{ fontSize: '16px' }}>Treatment: {record.treatment}</p>
                     </div>
                   ))}
                 </div>
               )}
               {activeTab === "current-problem" && (
                 <div style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '16px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
-                  <p>{patientData.currentProblem}</p>
-                  <p><strong>Potential Diagnoses:</strong></p>
-                  <ul>
+                  <p style={{ fontSize: '16px' }}>{patientData.currentProblem}</p>
+                  <h4 style={{ marginTop: '16px', fontWeight: '700' }}>Potential Diagnoses:</h4>
+                  <ul style={{ fontSize: '16px' }}>
                     {patientData.potentialDiagnoses.map((diagnosis, index) => (
                       <li key={index}>{diagnosis}</li>
                     ))}
