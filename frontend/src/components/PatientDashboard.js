@@ -45,7 +45,7 @@ const PatientDashboard = () => {
   const iconStyle = { marginRight: '8px' };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#e0f7fa', fontFamily: 'Roboto, sans-serif' }}>
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#e0f7fa', fontFamily: 'SUSE, sans-serif' }}>
       {isMenuOpen && (
         <div style={{ width: '250px', backgroundColor: '#1976d2', padding: '16px', color: 'white' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '16px' }}>Patients</h2>
