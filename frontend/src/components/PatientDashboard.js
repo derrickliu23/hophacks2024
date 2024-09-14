@@ -223,7 +223,7 @@ const PatientDetailedInfo = ({ patient }) => (
     logoutButton: {
       position: 'absolute',
       right: '30px', // Distance from the right edge of the viewport
-      backgroundColor: '#ff4d4d',
+      backgroundColor: '#3EB489',
       color: 'white',
       padding: '10px 20px',
       border: 'none',
