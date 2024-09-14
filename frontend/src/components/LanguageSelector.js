@@ -14,7 +14,8 @@ const LanguageSelector = ({ onLanguageChange }) => {
 
   const buttonStyle = {
     position: 'absolute',
-    left: '30px', // Distance from the left edge of the viewport
+    top: '46px',
+    left: '50px', // Distance from the left edge of the viewport
     backgroundColor: '#ff4d4d',
     color: 'white',
     padding: '10px 20px',
@@ -22,12 +23,13 @@ const LanguageSelector = ({ onLanguageChange }) => {
     borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: 'bold',
+    zIndex: 3,
   };
 
   const dropdownStyle = {
     position: 'absolute',
-    top: '50px',
-    left: '10px',
+    top: '86px',
+    left: '60px',
     backgroundColor: 'white',
     border: '1px solid #ddd',
     borderRadius: '5px',
