@@ -34,18 +34,24 @@ const patientsData = {
  }
 };
 
-
 const PatientDashboard = () => {
  const [selectedPatient, setSelectedPatient] = useState("JD001");
  const [isMenuOpen, setIsMenuOpen] = useState(true);
  const [activeTab, setActiveTab] = useState("personal-info");
 
-
  const patientData = patientsData[selectedPatient];
-
 
  const toggleMenu = () => setIsMenuOpen(prev => !prev);
 
+ const buttonStyle = (tabName) => ({
+   backgroundColor: activeTab === tabName ? '#4caf50' : '#f0f0f0',
+   color: activeTab === tabName ? '#fff' : '#000',
+   border: 'none',
+   padding: '10px 20px',
+   marginRight: '10px',
+   cursor: 'pointer',
+   borderRadius: '5px'
+ });
 
  return (
    <div style={{ display: 'flex', height: '100vh', backgroundColor: backgroundColor }}>
@@ -73,7 +79,6 @@ const PatientDashboard = () => {
        </div>
      )}
 
-
      <div style={{ flex: 1, overflow: 'hidden' }}>
        <div style={{ padding: '16px' }}>
          <button onClick={toggleMenu} style={{ marginBottom: '16px' }}>
@@ -82,10 +87,26 @@ const PatientDashboard = () => {
          <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>{patientData.name}</h2>
            <div>
-             <button onClick={() => setActiveTab("personal-info")}>Personal Info</button>
-             <button onClick={() => setActiveTab("medical-records")}>Medical Records</button>
-             <button onClick={() => setActiveTab("current-problem")}>Current Problem</button>
+             <button
+               onClick={() => setActiveTab("personal-info")}
+               style={buttonStyle("personal-info")}
+             >
+               Personal Info
+             </button>
+             <button
+               onClick={() => setActiveTab("medical-records")}
+               style={buttonStyle("medical-records")}
+             >
+               Medical Records
+             </button>
+             <button
+               onClick={() => setActiveTab("current-problem")}
+               style={buttonStyle("current-problem")}
+             >
+               Current Problem
+             </button>
            </div>
+
            {activeTab === "personal-info" && (
              <div>
                <p>Age: {patientData.personalInfo.age}</p>
@@ -121,6 +142,5 @@ const PatientDashboard = () => {
    </div>
  );
 };
-
 
 export default PatientDashboard;
