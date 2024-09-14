@@ -9,7 +9,7 @@ const App = () => {
     <div style={styles.container}>
       {!isAuthenticated ? (
         <div style={styles.loginContainer}>
-          <h1 style={styles.title}>Welcome to My App</h1>
+          <h1 style={styles.title}>Welcome to </h1>
           <p style={styles.subText}>Sign in to continue</p>
           <button style={styles.loginButton} onClick={() => loginWithRedirect()}>
             Log In
@@ -54,7 +54,7 @@ const styles = {
     marginBottom: '20px',
   },
   loginButton: {
-    background: 'linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4)',
+    background: 'linear-gradient(#bec6f9, #aeb8f8, #9ba7f3, #8492f1)',
     border: 'none',
     borderRadius: '8px',
     color: 'white',
