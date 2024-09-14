@@ -3,10 +3,13 @@ const { ChatOpenAI } = require("@langchain/openai");
 const { BufferMemory } = require("langchain/memory");
 const { ConversationChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { RecursiveCharacterTextSplitter } = require("langchain/text_splitters");
-const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
-const { Chroma } = require("langchain/vectorstores/chroma");
-const { RetrievalQA } = require("langchain/chains");
+const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
+const { OpenAIEmbeddings } = require("@langchain/openai");
+const { Chroma } = require("@langchain/community/vectorstores/chroma");
+const { RetrievalQAChain } = require("langchain/chains");
+
+process.env.OPENAI_API_KEY = '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';
+
 const Twilio = require('twilio');
 const fs = require('fs');
 const pdf = require('pdf-parse');
@@ -16,28 +19,29 @@ app.use(express.urlencoded({ extended: false }));
 
 let vectorStore;
 
-// Load and process the medical textbook
 async function processMedicalTextbook() {
-    const dataBuffer = fs.readFileSync('medical_textbook.pdf');
-    const data = await pdf(dataBuffer);
-    const textContent = data.text;
+  const dataBuffer = fs.readFileSync('medical_textbook.pdf');
+  const data = await pdf(dataBuffer);
+  const textContent = data.text;
 
-    const textSplitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000,
-        chunkOverlap: 200,
-    });
-    const splits = await textSplitter.splitText(textContent);
+  const textSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+  });
+  const splits = await textSplitter.splitText(textContent);
 
-    const embeddings = new OpenAIEmbeddings();
-    vectorStore = await Chroma.fromTexts(splits, splits, embeddings);
+  const embeddings = new OpenAIEmbeddings();
+  
+  vectorStore = await Chroma.fromTexts(splits, splits, embeddings, {
+    collectionName: "medical_textbook",
+    numDimensions: 1536
+  });
 }
 
 processMedicalTextbook();
 
-// Define the assistant's role and instructions
-const systemMessage = "You are an AI assistant trained to conduct patient assessments. Use the medical textbook information to ask appropriate questions about the patient's symptoms, medical history, and current condition. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences. Once you have gathered all relevant information, offer to hang up the call.";
+const systemMessage = "You are an AI assistant conducting patient assessments. Use the medical textbook information to ask appropriate questions about the patient's symptoms, medical history, and current condition. Ask no more than one question at a time. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Once you have gathered all relevant information, offer to end the call.";
 
-// Initialize the model with the system message
 const model = new ChatOpenAI({
   openAIApiKey: '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',
   modelName: "gpt-4-turbo",
@@ -62,80 +66,56 @@ const chain = new ConversationChain({
   prompt: prompt
 });
 
-// Track patient data for the conversation
 let patientData = {
   name: null,
   age: null,
   idNumber: null,
   symptoms: null,
-  loopCount: 0 // Track potential loops
 };
+
+let discussedTopics = new Set();
+let conversationStage = 0;
+const stages = ['initial symptoms', 'detailed symptoms', 'medical history', 'lifestyle factors', 'family history', 'current medications'];
 
 async function queryLangChain(userInput) {
   try {
     console.log('Patient input:', userInput);
 
-    // Check if we already have collected the patient's name
     if (!patientData.name) {
       patientData.name = userInput;
-      return `Thank you. Can you please tell me your age?`;
+      return `Thank you, ${patientData.name}. Can you please tell me your age?`;
     }
 
-    // Check if we already have collected the patient's age
     if (!patientData.age) {
       patientData.age = userInput;
       return `Thanks! Could you please provide your ID number?`;
     }
 
-    // Check if we already have collected the patient's ID number
     if (!patientData.idNumber) {
       patientData.idNumber = userInput;
       return `Thanks for that information! Now, can you describe any symptoms you're experiencing?`;
     }
 
-    // After collecting name, age, and ID number, move on to symptoms
-    if (!patientData.symptoms) {
-      patientData.symptoms = userInput;
-      
-      // Query the medical textbook for guidance on follow-up questions
+    if (!discussedTopics.has(userInput.toLowerCase())) {
+      discussedTopics.add(userInput.toLowerCase());
+
       const retriever = vectorStore.asRetriever();
-      const qaChain = RetrievalQA.fromChainType(model, {
-        chain_type: "stuff",
-        retriever: retriever,
+      const qaChain = RetrievalQAChain.fromLLM(model, retriever);
+
+      const currentStage = stages[conversationStage];
+      conversationStage = (conversationStage + 1) % stages.length;
+
+      const textbookResult = await qaChain.call({ 
+        query: `Given these patient symptoms: ${userInput}, and considering we've already asked about ${Object.keys(patientData).join(', ')}, what specific, non-repetitive follow-up questions or areas should I inquire about next, based on standard medical assessment protocols for the stage: ${currentStage}?` 
       });
-      const textbookResult = await qaChain.call({ query: `What follow-up questions should I ask for a patient reporting these symptoms: ${userInput}` });
-      
-      // Combine textbook guidance with the conversation
-      const combinedInput = `Patient symptoms: ${userInput}\nRelevant medical textbook guidance: ${textbookResult.text}\nBased on this, what should I ask next?`;
-      
+
+      const combinedInput = `Patient symptoms: ${userInput}\nCurrent conversation stage: ${currentStage}\nRelevant medical textbook guidance: ${textbookResult.text}\nBased on this information, provide a response that includes: 1) A brief acknowledgment of the patient's input, 2) At most one follow-up question based on the textbook guidance and the current stage (${currentStage}), and 3) A request for any additional symptoms or concerns the patient hasn't mentioned yet. Keep responses to two or three sentences maximum.`;
+
       const response = await chain.call({ input: combinedInput });
       return response.response;
+    } else {
+      return "We've discussed that already. Can you tell me about any other symptoms or concerns you haven't mentioned yet?";
     }
-
-    // Check if the conversation is looping
-    if (userInput.toLowerCase().includes(patientData.symptoms.toLowerCase())) {
-      patientData.loopCount++;
-    }
-
-    // End the call if a loop is detected (e.g., repeated symptoms question)
-    if (patientData.loopCount >= 2) {
-      return `It seems we have covered everything. Thank you for your time. I will now hang up. Have a great day!`;
-    }
-
-    // Query the medical textbook for guidance on follow-up questions
-    const retriever = vectorStore.asRetriever();
-    const qaChain = RetrievalQA.fromChainType(model, {
-      chain_type: "stuff",
-      retriever: retriever,
-    });
-    const textbookResult = await qaChain.call({ query: `What follow-up questions should I ask for a patient who says: ${userInput}` });
-
-    // Combine textbook guidance with the conversation
-    const combinedInput = `Patient said: ${userInput}\nRelevant medical textbook guidance: ${textbookResult.text}\nBased on this, what should I ask next?`;
-
-    const response = await chain.call({ input: combinedInput });
-    console.log('Assistant response:', response.response);
-    return response.response;
   } catch (error) {
     console.error('Error querying LangChain:', error);
     return "I apologize, but I didn't quite understand. Could you please describe your symptoms or concerns again?";
@@ -150,24 +130,21 @@ app.post('/voice', async (req, res) => {
     try {
       const langChainResponse = await queryLangChain(speechResult);
 
-      // If the assistant indicates that the call should end
-      if (langChainResponse.includes("I will now hang up")) {
-        twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);
-        twiml.hangup(); // Hang up the call politely
+      if (langChainResponse.toLowerCase().includes("end the call") || langChainResponse.toLowerCase().includes("hang up")) {
+        twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
+        twiml.hangup();
       } else {
-        // Continue the conversation
-        twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);
-
+        twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
         const gather = twiml.gather({
           input: 'speech',
           speechTimeout: 'auto',
           action: '/voice',
         });
-        gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' });
+        gather.say({ voice: 'alice', language: 'en-US' });
       }
     } catch (error) {
       console.error('Error processing request:', error);
-      twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
+      twiml.say({ voice: 'alice', language: 'en-US' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
       twiml.redirect('/voice');
     }
   } else {
@@ -176,21 +153,18 @@ app.post('/voice', async (req, res) => {
       speechTimeout: 'auto',
       action: '/voice',
     });
-    gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'Hello, I\'m your AI medical assistant for today. Can I have your name, please?');
+    gather.say({ voice: 'alice', language: 'en-US' }, 'Hello, I\'m your AI medical assistant for today. Can I have your name, please?');
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
   res.end(twiml.toString());
 });
 
-// Add this new endpoint to handle status callbacks
 app.post('/call-status', (req, res) => {
   const callSid = req.body.CallSid;
   const callStatus = req.body.CallStatus;
-
   console.log(`Call ${callSid} ended with status: ${callStatus}`);
 
-  // Perform cleanup operations
   if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {
     clearConversationMemory(callSid);
     logCallDetails(callSid, callStatus);
@@ -201,14 +175,14 @@ app.post('/call-status', (req, res) => {
 
 function clearConversationMemory(callSid) {
   console.log(`Clearing conversation memory for call ${callSid}`);
-  // Reset patientData for the next call
   patientData = {
     name: null,
     age: null,
     idNumber: null,
     symptoms: null,
-    loopCount: 0
   };
+  discussedTopics.clear();
+  conversationStage = 0;
 }
 
 function logCallDetails(callSid, callStatus) {
