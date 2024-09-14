@@ -4,6 +4,7 @@
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "phoneBot.js",
   "dependencies": {
+    "@auth0/auth0-react": "^2.2.4",
     "@langchain/core": "^0.3.0",
     "@langchain/openai": "^0.3.0",
     "abort-controller": "^3.0.0",

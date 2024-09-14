@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { TranslatableText } from './TranslationContext'; // Import the TranslatableText component
 
 const patientsData = {
   "JD001": {
@@ -49,7 +50,9 @@ const UrgentIndicator = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {isHovered ? (
-        <span style={{ padding: '0 10px' }}>URGENT!</span>
+        <span style={{ padding: '0 10px' }}>
+          <TranslatableText>URGENT!</TranslatableText> {/* Translatable */}
+        </span>
       ) : (
         '!'
       )}
@@ -90,27 +93,31 @@ const PatientCard = ({ patient, onClick }) => (
       {patient.name}
     </div>
     <div style={styles.cardContent}>
-      <p><strong>Age:</strong> {patient.personalInfo.age}</p>
-      <p><strong>Gender:</strong> {patient.personalInfo.gender}</p>
-      <p><strong>Contact:</strong> {patient.personalInfo.contact}</p>
-      <p><strong>Current Problem:</strong> {patient.currentProblem}</p>
+      <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age}</p>
+      <p><strong><TranslatableText>Gender:</TranslatableText></strong> {patient.personalInfo.gender}</p>
+      <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact}</p>
+      <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem}</p>
     </div>
   </div>
 );
 
 const PatientDetailedInfo = ({ patient }) => (
   <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', maxWidth: '800px', margin: '2rem auto' }}>
-    <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>{patient.name} - Detailed Information</h2>
-    <p><strong>Age:</strong> {patient.personalInfo.age}</p>
-    <p><strong>Gender:</strong> {patient.personalInfo.gender}</p>
-    <p><strong>Contact:</strong> {patient.personalInfo.contact}</p>
-    <p><strong>Current Problem:</strong> {patient.currentProblem}</p>
+    <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>
+      {patient.name} - <TranslatableText>Detailed Information</TranslatableText>
+    </h2>
+    <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age}</p>
+    <p><strong><TranslatableText>Gender:</TranslatableText></strong> {patient.personalInfo.gender}</p>
+    <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact}</p>
+    <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem}</p>
     <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
-      <h3 style={{ color: '#3498db', marginBottom: '1rem' }}>Additional Details (Placeholder)</h3>
-      <p><strong>Medical History:</strong> Placeholder for detailed medical history</p>
-      <p><strong>Medications:</strong> Placeholder for current medications</p>
-      <p><strong>Lab Results:</strong> Placeholder for recent lab results</p>
-      <p><strong>Treatment Plan:</strong> Placeholder for current treatment plan</p>
+      <h3 style={{ color: '#3498db', marginBottom: '1rem' }}>
+        <TranslatableText>Additional Details (Placeholder)</TranslatableText>
+      </h3>
+      <p><strong><TranslatableText>Medical History:</TranslatableText></strong> <TranslatableText>Placeholder for detailed medical history</TranslatableText></p>
+      <p><strong><TranslatableText>Medications:</TranslatableText></strong> <TranslatableText>Placeholder for current medications</TranslatableText></p>
+      <p><strong><TranslatableText>Lab Results:</TranslatableText></strong> <TranslatableText>Placeholder for recent lab results</TranslatableText></p>
+      <p><strong><TranslatableText>Treatment Plan:</TranslatableText></strong> <TranslatableText>Placeholder for current treatment plan</TranslatableText></p>
     </div>
   </div>
 );
@@ -134,12 +141,16 @@ const PatientDashboard = () => {
         style={styles.logoutButton}
         onClick={() => logout({ returnTo: window.location.origin })}
       >
-        Log Out
+        <TranslatableText>Log Out</TranslatableText>
       </button>
 
       <div style={styles.header}>
         <h1 style={styles.title}>
-          {selectedPatient ? `Patient Details: ${selectedPatient.name}` : 'Patient Dashboard'}
+          {selectedPatient ? (
+            <TranslatableText>Patient Details:</TranslatableText> + selectedPatient.name
+          ) : (
+            <TranslatableText>Patient Dashboard</TranslatableText>
+          )}
         </h1>
       </div>
 
@@ -162,7 +173,7 @@ const PatientDashboard = () => {
           onClick={() => setSelectedPatient(null)}
           style={styles.backButton}
         >
-          Back to Dashboard
+          <TranslatableText>Back to Dashboard</TranslatableText>
         </button>
       )}
     </div>
@@ -198,47 +209,47 @@ const styles = {
     padding: '20px',
     textAlign: 'center',
     color: 'white',
-    boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
-    marginBottom: '40px',
+    borderRadius: '8px',
+    marginBottom: '20px',
   },
   title: {
+    margin: '0',
     fontSize: '2rem',
-    fontWeight: 'bold',
-    margin: 0,
   },
   content: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '20px',
+    width: '100%',
   },
   card: {
-    width: '300px',
     backgroundColor: 'white',
     borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    overflow: 'hidden',
+    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
+    padding: '20px',
     position: 'relative',
+    transition: 'transform 0.2s ease, box-shadow 0.3s ease',
   },
   cardHeader: {
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
     backgroundColor: '#3498db',
     color: 'white',
-    padding: '16px',
-    fontWeight: 'bold',
-    fontSize: '1.2rem',
+    padding: '10px',
+    borderRadius: '8px',
   },
   cardContent: {
-    padding: '16px',
+    marginTop: '10px',
   },
   backButton: {
-    display: 'block',
-    margin: '2rem auto',
-    padding: '0.5rem 1rem',
+    marginTop: '20px',
     backgroundColor: '#3498db',
     color: 'white',
+    padding: '10px 20px',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
+    fontWeight: 'bold',
   },
 };
 
