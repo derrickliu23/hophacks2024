@@ -50,8 +50,12 @@ const PatientDashboard = () => {
    padding: '10px 20px',
    marginRight: '10px',
    cursor: 'pointer',
-   borderRadius: '5px'
+   borderRadius: '5px',
+   display: 'flex',
+   alignItems: 'center'
  });
+
+ const iconStyle = { marginRight: '8px' };
 
  return (
    <div style={{ display: 'flex', height: '100vh', backgroundColor: backgroundColor }}>
@@ -86,23 +90,28 @@ const PatientDashboard = () => {
          </button>
          <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
            <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>{patientData.name}</h2>
-           <div>
+           
+           {/* Flexbox Container for the Buttons */}
+           <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
              <button
                onClick={() => setActiveTab("personal-info")}
                style={buttonStyle("personal-info")}
              >
+               <i className="fas fa-user" style={iconStyle}></i>
                Personal Info
              </button>
              <button
                onClick={() => setActiveTab("medical-records")}
                style={buttonStyle("medical-records")}
              >
+               <i className="fas fa-file-medical" style={iconStyle}></i>
                Medical Records
              </button>
              <button
                onClick={() => setActiveTab("current-problem")}
                style={buttonStyle("current-problem")}
              >
+               <i className="fas fa-stethoscope" style={iconStyle}></i>
                Current Problem
              </button>
            </div>
