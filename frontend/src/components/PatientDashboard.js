@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const patientsData = {
   "JD001": {
@@ -19,71 +20,104 @@ const patientsData = {
 };
 
 const PatientCard = ({ patient }) => (
-  <div style={{
-    width: '300px',
-    margin: '1rem',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-    overflow: 'hidden',
-    backgroundColor: 'white'
-  }}>
-    <div style={{
-      backgroundColor: '#3498db',
-      color: 'white',
-      padding: '1rem',
-      fontWeight: 'bold',
-      fontSize: '1.2rem'
-    }}>
+  <div style={styles.card}>
+    <div style={styles.cardHeader}>
       {patient.name}
     </div>
-    <div style={{ padding: '1rem' }}>
-      <p style={{ marginBottom: '0.5rem' }}><strong>Age:</strong> {patient.personalInfo.age}</p>
-      <p style={{ marginBottom: '0.5rem' }}><strong>Gender:</strong> {patient.personalInfo.gender}</p>
-      <p style={{ marginBottom: '0.5rem' }}><strong>Contact:</strong> {patient.personalInfo.contact}</p>
-      <p style={{ marginTop: '1rem' }}><strong>Current Problem:</strong> {patient.currentProblem}</p>
+    <div style={styles.cardContent}>
+      <p><strong>Age:</strong> {patient.personalInfo.age}</p>
+      <p><strong>Gender:</strong> {patient.personalInfo.gender}</p>
+      <p><strong>Contact:</strong> {patient.personalInfo.contact}</p>
+      <p><strong>Current Problem:</strong> {patient.currentProblem}</p>
     </div>
   </div>
 );
 
 const PatientDashboard = () => {
+  const { logout } = useAuth0();
+
   return (
-    <div style={{
-      backgroundColor: '#ecf0f1',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      <div style={{
-        backgroundColor: '#3498db',
-        color: 'white',
-        padding: '1.5rem',
-        textAlign: 'center',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <h1 style={{
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          margin: 0
-        }}>
-          Patient Dashboard
-        </h1>
+    <div style={styles.dashboard}>
+      <button
+        style={styles.logoutButton}
+        onClick={() => logout({ returnTo: window.location.origin })}
+      >
+        Log Out
+      </button>
+
+      <div style={styles.header}>
+        <h1 style={styles.title}>Patient Dashboard</h1>
       </div>
-      <div style={{
-        padding: '2rem',
-        flex: 1
-      }}>
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center'
-        }}>
-          {Object.entries(patientsData).map(([id, patient]) => (
-            <PatientCard key={id} patient={patient} />
-          ))}
-        </div>
+
+      <div style={styles.content}>
+        {Object.entries(patientsData).map(([id, patient]) => (
+          <PatientCard key={id} patient={patient} />
+        ))}
       </div>
     </div>
   );
+};
+
+// Styles
+const styles = {
+  dashboard: {
+    position: 'relative',
+    minHeight: '100vh',
+    backgroundColor: '#ecf0f1',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  logoutButton: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    backgroundColor: '#ff4d4d',
+    color: 'white',
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  },
+  header: {
+    backgroundColor: '#3498db',
+    width: '100%',
+    padding: '20px',
+    textAlign: 'center',
+    color: 'white',
+    boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
+    marginBottom: '40px',
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    margin: 0,
+  },
+  content: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: '20px',
+  },
+  card: {
+    width: '300px',
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    backgroundColor: '#3498db',
+    color: 'white',
+    padding: '16px',
+    fontWeight: 'bold',
+    fontSize: '1.2rem',
+  },
+  cardContent: {
+    padding: '16px',
+  },
 };
 
 export default PatientDashboard;
