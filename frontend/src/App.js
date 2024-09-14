@@ -65,7 +65,7 @@ const styles = {
     marginBottom: '20px',
   },
   loginButton: {
-    background: 'linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4)',
+    background: 'linear-gradient(#bec6f9, #aeb8f8, #9ba7f3, #8492f1)',
     border: 'none',
     borderRadius: '8px',
     color: 'white',
