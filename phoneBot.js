@@ -1,19 +1,20 @@
+const express = require('express');
 const { ChatOpenAI } = require("@langchain/openai");
 const { BufferMemory } = require("langchain/memory");
 const { ConversationChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const Twilio = require('twilio');
-const express = require('express');
+
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
 // Define the assistant's role and instructions
-const systemMessage = "You are an experienced nurse conducting a patient assessment. Ask targeted questions about the patient's symptoms, medical history, and current condition. Be empathetic, professional, and thorough in your inquiries. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences.";
+const systemMessage = "You are an experienced nurse conducting a patient assessment over a call. Ask targeted questions about the patient's symptoms, medical history, and current condition. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences. Once you have gathered all relevant information, please offer to hang up the call.";
 
 // Initialize the model with the system message
 const model = new ChatOpenAI({
   openAIApiKey: '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',
-  modelName: "gpt-3.5-turbo",
+  modelName: "gpt-4-turbo",
   temperature: 0.7,
 });
 
@@ -22,6 +23,7 @@ const memory = new BufferMemory({
   memoryKey: "history",
   inputKey: "input"
 });
+
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", systemMessage],
   ["human", "{input}"],
@@ -36,6 +38,7 @@ const chain = new ConversationChain({
 
 async function queryLangChain(userInput) {
   try {
+    console.log('Patient input:', userInput); // Log the patient's input
     const response = await chain.call({ 
       input: userInput
     });
@@ -65,7 +68,7 @@ app.post('/voice', async (req, res) => {
         speechTimeout: 'auto',
         action: '/voice',
       });
-      gather.say({ voice: 'alice' }, "Please tell me more or ask any questions you may have.");
+      gather.say({ voice: 'alice' });
     } catch (error) {
       console.error('Error processing request:', error);
       twiml.say({ voice: 'alice' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
@@ -84,6 +87,38 @@ app.post('/voice', async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/xml' });
   res.end(twiml.toString());
 });
+
+// Add this new endpoint to handle status callbacks
+app.post('/call-status', (req, res) => {
+  const callSid = req.body.CallSid;
+  const callStatus = req.body.CallStatus;
+
+  console.log(`Call ${callSid} ended with status: ${callStatus}`);
+
+  // Perform cleanup operations
+  if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {
+    // Clear the conversation memory for this call
+    clearConversationMemory(callSid);
+
+    // Optionally, log the call details or save the conversation
+    logCallDetails(callSid, callStatus);
+  }
+
+  res.sendStatus(200);
+});
+
+function clearConversationMemory(callSid) {
+  // Implement logic to clear the memory for the specific call
+  // This might involve maintaining a map of CallSid to memory instances
+  console.log(`Clearing conversation memory for call ${callSid}`);
+  // Example: memory.clear(); // Modify this as needed based on your implementation
+}
+
+function logCallDetails(callSid, callStatus) {
+  // Implement logic to log call details or save the conversation
+  console.log(`Logging details for call ${callSid} with final status ${callStatus}`);
+  // Example: Save to a database or logging service
+}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
