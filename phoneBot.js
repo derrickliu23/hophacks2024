@@ -1,36 +1,49 @@
 const { ChatOpenAI } = require("@langchain/openai");
 const { BufferMemory } = require("langchain/memory");
 const { ConversationChain } = require("langchain/chains");
+const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const Twilio = require('twilio');
 const express = require('express');
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
 // Define the assistant's role and instructions
-const systemMessage = "You are a nurse trying to understand more about a patient's illness. Please politely analyze their symptoms to ask targeted follow-up questions.";
+const systemMessage = "You are an experienced nurse conducting a patient assessment. Ask targeted questions about the patient's symptoms, medical history, and current condition. Be empathetic, professional, and thorough in your inquiries. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences.";
 
 // Initialize the model with the system message
 const model = new ChatOpenAI({
   openAIApiKey: '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',
-  modelName: "gpt-3.5-turbo", // or your preferred model
+  modelName: "gpt-3.5-turbo",
   temperature: 0.7,
 });
 
-const memory = new BufferMemory();
+const memory = new BufferMemory({
+  returnMessages: true,
+  memoryKey: "history",
+  inputKey: "input"
+});
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", systemMessage],
+  ["human", "{input}"],
+  ["ai", "{history}"]
+]);
+
 const chain = new ConversationChain({
   llm: model,
   memory: memory,
-  initialPrompt: systemMessage, // Pass the system message as initial prompt
+  prompt: prompt
 });
 
 async function queryLangChain(userInput) {
   try {
-    const response = await chain.call({ input: userInput });
+    const response = await chain.call({ 
+      input: userInput
+    });
     console.log('Assistant response:', response.response);
     return response.response;
   } catch (error) {
     console.error('Error querying LangChain:', error);
-    return "I'm sorry, I couldn't understand that. Could you try asking in a different way?";
+    return "I apologize, but I didn't quite understand. Could you please describe your symptoms or concerns again?";
   }
 }
 
@@ -46,33 +59,33 @@ app.post('/voice', async (req, res) => {
       // Say the LangChain response using Alice's voice
       twiml.say({ voice: 'alice' }, langChainResponse);
 
-      // Prompt the user to ask another question or end the conversation
+      // Prompt the user to continue the conversation
       const gather = twiml.gather({
         input: 'speech',
         speechTimeout: 'auto',
         action: '/voice',
       });
-      gather.say({ voice: 'alice' }, '');
+      gather.say({ voice: 'alice' }, "Please tell me more or ask any questions you may have.");
     } catch (error) {
       console.error('Error processing request:', error);
-      twiml.say({ voice: 'alice' }, 'We encountered an error processing your request. Please try again.');
+      twiml.say({ voice: 'alice' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
       twiml.redirect('/voice');
     }
   } else {
-    // Prompt the user to ask a question
+    // Initial prompt to start the conversation
     const gather = twiml.gather({
       input: 'speech',
       speechTimeout: 'auto',
       action: '/voice',
     });
-    gather.say({ voice: 'alice' }, 'How can I help you?');
+    gather.say({ voice: 'alice' }, 'Hello, I\'m your nurse for today. How can I assist you? Please describe any symptoms or concerns you\'re experiencing.');
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
   res.end(twiml.toString());
 });
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });
