@@ -1,23 +1,34 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import PatientDashboard from './components/PatientDashboard'; // Assuming you have this component
+import PatientDashboard from './components/PatientDashboard';
+import LanguageSelector from './components/LanguageSelector';
+import { useTranslation, TranslatableText } from './components/TranslationContext';
 
 const App = () => {
   const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
+  const { setLanguage } = useTranslation(); // You don't need `translate` here
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+  };
 
   return (
     <div style={styles.container}>
+      <LanguageSelector onLanguageChange={handleLanguageChange} />
       {!isAuthenticated ? (
         <div style={styles.loginContainer}>
-          <h1 style={styles.title}>Welcome to My App</h1>
-          <p style={styles.subText}>Sign in to continue</p>
+          <h1 style={styles.title}>
+            <TranslatableText>Welcome to My App</TranslatableText>
+          </h1>
+          <p style={styles.subText}>
+            <TranslatableText>Sign in to continue</TranslatableText>
+          </p>
           <button style={styles.loginButton} onClick={() => loginWithRedirect()}>
-            Log In
+            <TranslatableText>Log In</TranslatableText>
           </button>
         </div>
       ) : (
         <div>
-          {/* Render the PatientDashboard when authenticated */}
           <PatientDashboard logout={logout} user={user} />
         </div>
       )}
@@ -25,7 +36,7 @@ const App = () => {
   );
 };
 
-// Styles (could also be moved to a CSS file)
+// Styles remain the same
 const styles = {
   container: {
     display: 'flex',
@@ -54,7 +65,7 @@ const styles = {
     marginBottom: '20px',
   },
   loginButton: {
-    background: 'linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4)',
+    background: 'linear-gradient(#bec6f9, #aeb8f8, #9ba7f3, #8492f1)',
     border: 'none',
     borderRadius: '8px',
     color: 'white',
