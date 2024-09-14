@@ -88,7 +88,7 @@ const PatientCard = ({ patient, onClick }) => (
     {patient.isUrgent && <UrgentIndicator />}
     <div style={{
       ...styles.cardHeader,
-      backgroundColor: patient.isUrgent ? '#FF0000' : styles.cardHeader.backgroundColor, // Red background for urgent cases
+      backgroundColor: patient.isUrgent ? '#89CFF0' : styles.cardHeader.backgroundColor, // Red background for urgent cases
       color: patient.isUrgent ? 'white' : styles.cardHeader.color, // Ensure text is white on red background
     }}>
       {patient.name}
@@ -212,7 +212,7 @@ const PatientDetailedInfo = ({ patient }) => (
       boxSizing: 'border-box',
     },
     header: {
-      backgroundColor: '#3498db',
+      backgroundColor: '#89CFF0',
       width: '100%',
       padding: '20px',
       display: 'flex',
@@ -238,7 +238,7 @@ const PatientDetailedInfo = ({ patient }) => (
     logoutButton: {
       position: 'absolute',
       right: '30px', // Distance from the right edge of the viewport
-      backgroundColor: '#ff4d4d',
+      backgroundColor: '#3EB489',
       color: 'white',
       padding: '10px 20px',
       border: 'none',
@@ -265,7 +265,7 @@ const PatientDetailedInfo = ({ patient }) => (
     cardHeader: {
       fontSize: '1.2rem',
       fontWeight: 'bold',
-      backgroundColor: '#3498db',
+      backgroundColor: '#89CFF0',
       color: 'white',
       padding: '10px',
       borderRadius: '8px',
