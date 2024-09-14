@@ -99,8 +99,8 @@ const PatientDashboard = () => {
               <path d="M4 6H20V8H4V6ZM4 11H20V13H4V11ZM4 16H20V18H4V16Z" fill="white"/>
             </svg>
           </button>
-          <div style={{ marginTop: '40px' }}>
-            <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px', fontFamily: 'inherit' }}>
+          <div style={{ marginTop: '60px' }}> {/* Margin to avoid overlap with the toggle button */}
+            <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
               <h2 style={{ fontSize: '26px', marginBottom: '16px', fontWeight: '700' }}>{patientData.name}</h2>
               
               <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
