@@ -9,7 +9,7 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 
 // Define the assistant's role and instructions
-const systemMessage = "You are an experienced nurse conducting a patient assessment over a call. Ask targeted questions about the patient's symptoms, medical history, and current condition. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences. Once you have gathered all relevant information, please offer to hang up the call.";
+const systemMessage = "Ask targeted questions about the patient's symptoms, medical history, and current condition. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences. Once you have gathered all relevant information, offer to hang up the call.";
 
 // Initialize the model with the system message
 const model = new ChatOpenAI({
@@ -36,10 +36,54 @@ const chain = new ConversationChain({
   prompt: prompt
 });
 
+// Track patient data for the conversation
+let patientData = {
+  name: null,
+  age: null,
+  idNumber: null,
+  symptoms: null,
+  loopCount: 0 // Track potential loops
+};
+
 async function queryLangChain(userInput) {
   try {
-    console.log('Patient input:', userInput); // Log the patient's input
-    const response = await chain.call({ 
+    console.log('Patient input:', userInput);
+
+    // Check if we already have collected the patient's name
+    if (!patientData.name) {
+      patientData.name = userInput;
+      return `Thank you. Can you please tell me your age?`;
+    }
+
+    // Check if we already have collected the patient's age
+    if (!patientData.age) {
+      patientData.age = userInput;
+      return `Thanks! Could you please provide your ID number?`;
+    }
+
+    // Check if we already have collected the patient's ID number
+    if (!patientData.idNumber) {
+      patientData.idNumber = userInput;
+      return `Thanks for that information! Now, can you describe any symptoms you're experiencing?`;
+    }
+
+    // After collecting name, age, and ID number, move on to symptoms
+    if (!patientData.symptoms) {
+      patientData.symptoms = userInput;
+      return `Thank you for sharing your symptoms. Let's continue. How long have you been experiencing these symptoms?`;
+    }
+
+    // Check if the conversation is looping
+    if (userInput.toLowerCase().includes(patientData.symptoms.toLowerCase())) {
+      patientData.loopCount++;
+    }
+
+    // End the call if a loop is detected (e.g., repeated symptoms question)
+    if (patientData.loopCount >= 2) {
+      return `It seems we have covered everything. Thank you for your time. I will now hang up. Have a great day!`;
+    }
+
+    const response = await chain.call({
       input: userInput
     });
     console.log('Assistant response:', response.response);
@@ -56,31 +100,35 @@ app.post('/voice', async (req, res) => {
 
   if (speechResult) {
     try {
-      // Process the speech result with LangChain
       const langChainResponse = await queryLangChain(speechResult);
 
-      // Say the LangChain response using Joanne's voice
-      twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);
+      // If the assistant indicates that the call should end
+      if (langChainResponse.includes("I will now hang up")) {
+        twiml.say({ voice: 'alice' }, langChainResponse);
+        twiml.hangup(); // Hang up the call politely
+      } else {
+        // Continue the conversation
+        twiml.say({ voice: 'alice' }, langChainResponse);
 
-      // Prompt the user to continue the conversation
-      const gather = twiml.gather({
-        input: 'speech',
-        speechTimeout: 'auto',
-        action: '/voice',
-      });
-      gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, "Please tell me more or ask any questions you may have.");
+        const gather = twiml.gather({
+          input: 'speech',
+          speechTimeout: 'auto',
+          action: '/voice',
+        });
+        gather.say({ voice: 'alice' });
+      }
     } catch (error) {
       console.error('Error processing request:', error);
-      twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
-    } 
+      twiml.say({ voice: 'alice' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
+      twiml.redirect('/voice');
+    }
   } else {
-    // Initial prompt to start the conversation
     const gather = twiml.gather({
       input: 'speech',
       speechTimeout: 'auto',
       action: '/voice',
     });
-    gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'Hello, I\'m your nurse for today. How can I assist you? Please describe any symptoms or concerns you\'re experiencing.');
+    gather.say({ voice: 'alice' }, 'Hello, I\'m your nurse for today. Can I have your name, please?');
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
@@ -96,10 +144,8 @@ app.post('/call-status', (req, res) => {
 
   // Perform cleanup operations
   if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {
-    // Clear the conversation memory for this call
     clearConversationMemory(callSid);
 
-    // Optionally, log the call details or save the conversation
     logCallDetails(callSid, callStatus);
   }
 
@@ -107,16 +153,11 @@ app.post('/call-status', (req, res) => {
 });
 
 function clearConversationMemory(callSid) {
-  // Implement logic to clear the memory for the specific call
-  // This might involve maintaining a map of CallSid to memory instances
   console.log(`Clearing conversation memory for call ${callSid}`);
-  // Example: memory.clear(); // Modify this as needed based on your implementation
 }
 
 function logCallDetails(callSid, callStatus) {
-  // Implement logic to log call details or save the conversation
   console.log(`Logging details for call ${callSid} with final status ${callStatus}`);
-  // Example: Save to a database or logging service
 }
 
 const port = process.env.PORT || 3000;
