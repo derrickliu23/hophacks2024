@@ -63,12 +63,14 @@ async function queryOpenAI(userInput, threadId) {
   }
 }
 
+/*
 app.post('/voice', (req, res) => {
   console.log('Received POST request:', req.body); // Log incoming request
   res.send('Test response received!'); // Static response
 });
+*/
 
-/* 
+
 app.post('/voice', async (req, res) => {
   const twiml = new Twilio.twiml.VoiceResponse();
   const speechResult = req.body.SpeechResult;
@@ -121,7 +123,7 @@ app.post('/voice', async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/xml' });
   res.end(twiml.toString());
 });
-*/
+
 
 const port = 3000;
 app.listen(port, () => {
