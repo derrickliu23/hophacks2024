@@ -1,75 +1,38 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const { OpenAI } = require("openai");
+const { ChatOpenAI } = require("@langchain/openai");
+const { BufferMemory } = require("langchain/memory");
+const { ConversationChain } = require("langchain/chains");
 const Twilio = require('twilio');
-
+const express = require('express');
 const app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false }));
 
-const openai = new OpenAI({
-  apiKey: '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'
+// Define the assistant's role and instructions
+const systemMessage = "You are a nurse trying to understand more about a patient's illness. Please politely analyze their symptoms to ask targeted follow-up questions.";
+
+// Initialize the model with the system message
+const model = new ChatOpenAI({
+  openAIApiKey: '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',
+  modelName: "gpt-3.5-turbo", // or your preferred model
+  temperature: 0.7,
 });
 
-const assistantId = 'asst_TUfmaa8MIRMR4PkyAHLCv7aw';
+const memory = new BufferMemory();
+const chain = new ConversationChain({
+  llm: model,
+  memory: memory,
+  initialPrompt: systemMessage, // Pass the system message as initial prompt
+});
 
-let threadId;
-
-// Function to create a new thread
-async function createThread() {
+async function queryLangChain(userInput) {
   try {
-    const thread = await openai.beta.threads.create({
-      messages: [],
-    });
-    console.log('Thread created:', thread);
-    return thread.id;
+    const response = await chain.call({ input: userInput });
+    console.log('Assistant response:', response.response);
+    return response.response;
   } catch (error) {
-    console.error('Error creating thread:', error);
-    throw error;
-  }
-}
-
-// Function to query OpenAI with the user's input
-async function queryOpenAI(userInput, threadId) {
-  try {
-    // Create a message in the thread with the user's input
-    const message = await openai.beta.threads.messages.create(threadId, {
-      role: 'user',
-      content: userInput,
-    });
-
-    // Run the thread with the assistant
-    const run = await openai.beta.threads.runs.create(threadId, {
-      assistant_id: assistantId,
-    });
-
-    // Wait for the run to complete
-    let runStatus = run.status;
-    while (runStatus !== 'completed') {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const updatedRun = await openai.beta.threads.runs.retrieve(threadId, run.id);
-      runStatus = updatedRun.status;
-    }
-
-    // Retrieve the latest assistant's response from the thread
-    const threadMessages = await openai.beta.threads.messages.list(threadId, { order: 'desc' });
-    const assistantMessages = threadMessages.data.filter((message) => message.role === 'assistant');
-    const latestAssistantResponse = assistantMessages[0].content[0].text.value;
-
-    console.log('Assistant response:', latestAssistantResponse);
-    return latestAssistantResponse;
-  } catch (error) {
-    console.error('Error querying OpenAI:', error);
+    console.error('Error querying LangChain:', error);
     return "I'm sorry, I couldn't understand that. Could you try asking in a different way?";
   }
 }
-
-/*
-app.post('/voice', (req, res) => {
-  console.log('Received POST request:', req.body); // Log incoming request
-  res.send('Test response received!'); // Static response
-});
-*/
-
 
 app.post('/voice', async (req, res) => {
   const twiml = new Twilio.twiml.VoiceResponse();
@@ -77,15 +40,11 @@ app.post('/voice', async (req, res) => {
 
   if (speechResult) {
     try {
-      if (!threadId) {
-        threadId = await createThread();
-      }
+      // Process the speech result with LangChain
+      const langChainResponse = await queryLangChain(speechResult);
 
-      // Process the speech result with OpenAI
-      const openAIResponse = await queryOpenAI(speechResult, threadId);
-
-      // Say the OpenAI response using Alice's voice
-      twiml.say({ voice: 'alice' }, openAIResponse);
+      // Say the LangChain response using Alice's voice
+      twiml.say({ voice: 'alice' }, langChainResponse);
 
       // Prompt the user to ask another question or end the conversation
       const gather = twiml.gather({
@@ -100,30 +59,18 @@ app.post('/voice', async (req, res) => {
       twiml.redirect('/voice');
     }
   } else {
-    // If there's no speech result, check if a thread exists
-    if (threadId) {
-      // Prompt the user to ask another question or end the conversation
-      const gather = twiml.gather({
-        input: 'speech',
-        speechTimeout: 'auto',
-        action: '/voice',
-      });
-      gather.say({ voice: 'alice' }, 'Please ask your next question or say "end conversation" to finish.');
-    } else {
-      // If no thread exists, prompt the user to start a new conversation
-      const gather = twiml.gather({
-        input: 'speech',
-        speechTimeout: 'auto',
-        action: '/voice',
-      });
-      gather.say({ voice: 'alice' }, 'How can I help you?');
-    }
+    // Prompt the user to ask a question
+    const gather = twiml.gather({
+      input: 'speech',
+      speechTimeout: 'auto',
+      action: '/voice',
+    });
+    gather.say({ voice: 'alice' }, 'How can I help you?');
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
   res.end(twiml.toString());
 });
-
 
 const port = 3000;
 app.listen(port, () => {
