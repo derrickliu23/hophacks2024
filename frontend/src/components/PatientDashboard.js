@@ -75,6 +75,7 @@ const PatientDashboard = () => {
 
       <div style={{ flex: 1, overflow: 'hidden', backgroundColor: '#bbdefb' }}>
         <div style={{ padding: '16px', position: 'relative' }}>
+          {/* Toggle button placed above the main content */}
           <button
             onClick={toggleMenu}
             style={{
@@ -98,7 +99,7 @@ const PatientDashboard = () => {
               <path d="M4 6H20V8H4V6ZM4 11H20V13H4V11ZM4 16H20V18H4V16Z" fill="white"/>
             </svg>
           </button>
-          <div style={{ marginLeft: '50px' }}> {/* Margin to avoid overlap with the toggle button */}
+          <div style={{ marginTop: '60px' }}> {/* Margin to avoid overlap with the toggle button */}
             <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
               <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>{patientData.name}</h2>
               
