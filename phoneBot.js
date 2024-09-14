@@ -45,49 +45,69 @@ let patientData = {
   loopCount: 0 // Track potential loops
 };
 
+// Function to extract the name from the SpeechResult using GPT-4
+async function extractNameFromSpeech(speechResult) {
+  try {
+    // Prompt GPT model to extract the name from the provided speechResult
+    const extractionPrompt = `The following text is from a conversation. Please extract the full name of the person and discard any other unnecessary information: "${speechResult}". Return only the name.`;
+
+    const extractionChain = await chain.call({ input: extractionPrompt });
+    
+    const extractedName = extractionChain.response.trim(); // Get the extracted name from GPT
+    console.log('Extracted name:', extractedName);
+
+    return extractedName;
+  } catch (error) {
+    console.error('Error extracting name:', error);
+    return null;  // Handle error or return null if extraction fails
+  }
+}
+
 async function queryLangChain(userInput) {
   try {
     console.log('Patient input:', userInput);
 
     // Check if we already have collected the patient's name
     if (!patientData.name) {
-      patientData.name = userInput;
-      return `Thank you. Can you please tell me your age?`;
+      // Use GPT to extract the name from the userInput
+      const extractedName = await extractNameFromSpeech(userInput);
+      if (extractedName) {
+        patientData.name = extractedName;
+        return `Thank you, ${extractedName}. Can you please tell me your age?`;
+      } else {
+        return `I'm sorry, I couldn't quite catch your name. Could you please repeat it?`;
+      }
     }
 
-    // Check if we already have collected the patient's age
+    // Rest of the conversation flow (age, ID, symptoms)
     if (!patientData.age) {
       patientData.age = userInput;
       return `Thanks! Could you please provide your ID number?`;
     }
 
-    // Check if we already have collected the patient's ID number
     if (!patientData.idNumber) {
       patientData.idNumber = userInput;
       return `Thanks for that information! Now, can you describe any symptoms you're experiencing?`;
     }
 
-    // After collecting name, age, and ID number, move on to symptoms
     if (!patientData.symptoms) {
       patientData.symptoms = userInput;
       return `Thank you for sharing your symptoms. Let's continue. How long have you been experiencing these symptoms?`;
     }
 
-    // Check if the conversation is looping
+    // Loop detection logic
     if (userInput.toLowerCase().includes(patientData.symptoms.toLowerCase())) {
       patientData.loopCount++;
     }
 
-    // End the call if a loop is detected (e.g., repeated symptoms question)
     if (patientData.loopCount >= 2) {
       return `It seems we have covered everything. Thank you for your time. I will now hang up. Have a great day!`;
     }
 
-    const response = await chain.call({
-      input: userInput
-    });
+    const response = await chain.call({ input: userInput });
     console.log('Assistant response:', response.response);
     return response.response;
+
   } catch (error) {
     console.error('Error querying LangChain:', error);
     return "I apologize, but I didn't quite understand. Could you please describe your symptoms or concerns again?";
@@ -142,11 +162,14 @@ app.post('/call-status', (req, res) => {
 
   console.log(`Call ${callSid} ended with status: ${callStatus}`);
 
-  // Perform cleanup operations
+  // Perform cleanup operations and print the patient data
   if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {
     clearConversationMemory(callSid);
 
     logCallDetails(callSid, callStatus);
+    
+    // Print out the patient data after the call ends
+    console.log('Recorded Patient Data:', patientData);
   }
 
   res.sendStatus(200);
