@@ -56,8 +56,8 @@ app.post('/voice', async (req, res) => {
       // Process the speech result with LangChain
       const langChainResponse = await queryLangChain(speechResult);
 
-      // Say the LangChain response using Alice's voice
-      twiml.say({ voice: 'alice' }, langChainResponse);
+      // Say the LangChain response using Ruth's voice
+      twiml.say({ voice: 'Polly.Ruth', engine: 'neural' }, langChainResponse);
 
       // Prompt the user to continue the conversation
       const gather = twiml.gather({
@@ -65,10 +65,10 @@ app.post('/voice', async (req, res) => {
         speechTimeout: 'auto',
         action: '/voice',
       });
-      gather.say({ voice: 'alice' }, "Please tell me more or ask any questions you may have.");
+      gather.say({ voice: 'Polly.Ruth', engine: 'neural' }, "Please tell me more or ask any questions you may have.");
     } catch (error) {
       console.error('Error processing request:', error);
-      twiml.say({ voice: 'alice' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
+      twiml.say({ voice: 'Polly.Ruth', engine: 'neural' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
       twiml.redirect('/voice');
     }
   } else {
@@ -78,7 +78,7 @@ app.post('/voice', async (req, res) => {
       speechTimeout: 'auto',
       action: '/voice',
     });
-    gather.say({ voice: 'alice' }, 'Hello, I\'m your nurse for today. How can I assist you? Please describe any symptoms or concerns you\'re experiencing.');
+    gather.say({ voice: 'Polly.Ruth', engine: 'neural' }, 'Hello, I\'m your nurse for today. How can I assist you? Please describe any symptoms or concerns you\'re experiencing.');
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
