@@ -59,13 +59,8 @@ app.post('/voice', async (req, res) => {
       // Process the speech result with LangChain
       const langChainResponse = await queryLangChain(speechResult);
 
-<<<<<<< HEAD
       // Say the LangChain response using Joanne's voice
       twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);
-=======
-      // Say the LangChain response using Alice's voice
-      twiml.say({ voice: 'alice' }, langChainResponse);
->>>>>>> 339f1176c5b5e7dde26cfdc26e21f460a12e73a3
 
       // Prompt the user to continue the conversation
       const gather = twiml.gather({
@@ -73,23 +68,11 @@ app.post('/voice', async (req, res) => {
         speechTimeout: 'auto',
         action: '/voice',
       });
-<<<<<<< HEAD
-<<<<<<< HEAD
       gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, "Please tell me more or ask any questions you may have.");
     } catch (error) {
       console.error('Error processing request:', error);
       twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
-=======
-      gather.say({ voice: 'alice' }, "Please tell me more or ask any questions you may have.");
-=======
-      gather.say({ voice: 'alice' });
->>>>>>> 78c51d2f2a2029da6822d60870fc379e5d52c9f7
-    } catch (error) {
-      console.error('Error processing request:', error);
-      twiml.say({ voice: 'alice' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
->>>>>>> 339f1176c5b5e7dde26cfdc26e21f460a12e73a3
-      twiml.redirect('/voice');
-    }
+    } 
   } else {
     // Initial prompt to start the conversation
     const gather = twiml.gather({
@@ -97,11 +80,7 @@ app.post('/voice', async (req, res) => {
       speechTimeout: 'auto',
       action: '/voice',
     });
-<<<<<<< HEAD
     gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'Hello, I\'m your nurse for today. How can I assist you? Please describe any symptoms or concerns you\'re experiencing.');
-=======
-    gather.say({ voice: 'alice' }, 'Hello, I\'m your nurse for today. How can I assist you? Please describe any symptoms or concerns you\'re experiencing.');
->>>>>>> 339f1176c5b5e7dde26cfdc26e21f460a12e73a3
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
