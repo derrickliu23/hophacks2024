@@ -14,8 +14,8 @@ const LanguageSelector = ({ onLanguageChange }) => {
 
   const buttonStyle = {
     position: 'absolute',
-    top: '46px',
-    left: '50px', // Distance from the left edge of the viewport
+    top: '50px',
+    left: '70px', // Distance from the left edge of the viewport
     backgroundColor: '#ff4d4d',
     color: 'white',
     padding: '10px 20px',
