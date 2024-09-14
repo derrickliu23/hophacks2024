@@ -3,13 +3,39 @@ const { ChatOpenAI } = require("@langchain/openai");
 const { BufferMemory } = require("langchain/memory");
 const { ConversationChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
+const { RecursiveCharacterTextSplitter } = require("langchain/text_splitters");
+const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
+const { Chroma } = require("langchain/vectorstores/chroma");
+const { RetrievalQA } = require("langchain/chains");
 const Twilio = require('twilio');
+const fs = require('fs');
+const pdf = require('pdf-parse');
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
+let vectorStore;
+
+// Load and process the medical textbook
+async function processMedicalTextbook() {
+    const dataBuffer = fs.readFileSync('medical_textbook.pdf');
+    const data = await pdf(dataBuffer);
+    const textContent = data.text;
+
+    const textSplitter = new RecursiveCharacterTextSplitter({
+        chunkSize: 1000,
+        chunkOverlap: 200,
+    });
+    const splits = await textSplitter.splitText(textContent);
+
+    const embeddings = new OpenAIEmbeddings();
+    vectorStore = await Chroma.fromTexts(splits, splits, embeddings);
+}
+
+processMedicalTextbook();
+
 // Define the assistant's role and instructions
-const systemMessage = "Ask targeted questions about the patient's symptoms, medical history, and current condition. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences. Once you have gathered all relevant information, offer to hang up the call.";
+const systemMessage = "You are an AI assistant trained to conduct patient assessments. Use the medical textbook information to ask appropriate questions about the patient's symptoms, medical history, and current condition. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Limit your responses to 2-3 sentences. Once you have gathered all relevant information, offer to hang up the call.";
 
 // Initialize the model with the system message
 const model = new ChatOpenAI({
@@ -70,7 +96,20 @@ async function queryLangChain(userInput) {
     // After collecting name, age, and ID number, move on to symptoms
     if (!patientData.symptoms) {
       patientData.symptoms = userInput;
-      return `Thank you for sharing your symptoms. Let's continue. How long have you been experiencing these symptoms?`;
+      
+      // Query the medical textbook for guidance on follow-up questions
+      const retriever = vectorStore.asRetriever();
+      const qaChain = RetrievalQA.fromChainType(model, {
+        chain_type: "stuff",
+        retriever: retriever,
+      });
+      const textbookResult = await qaChain.call({ query: `What follow-up questions should I ask for a patient reporting these symptoms: ${userInput}` });
+      
+      // Combine textbook guidance with the conversation
+      const combinedInput = `Patient symptoms: ${userInput}\nRelevant medical textbook guidance: ${textbookResult.text}\nBased on this, what should I ask next?`;
+      
+      const response = await chain.call({ input: combinedInput });
+      return response.response;
     }
 
     // Check if the conversation is looping
@@ -83,9 +122,18 @@ async function queryLangChain(userInput) {
       return `It seems we have covered everything. Thank you for your time. I will now hang up. Have a great day!`;
     }
 
-    const response = await chain.call({
-      input: userInput
+    // Query the medical textbook for guidance on follow-up questions
+    const retriever = vectorStore.asRetriever();
+    const qaChain = RetrievalQA.fromChainType(model, {
+      chain_type: "stuff",
+      retriever: retriever,
     });
+    const textbookResult = await qaChain.call({ query: `What follow-up questions should I ask for a patient who says: ${userInput}` });
+
+    // Combine textbook guidance with the conversation
+    const combinedInput = `Patient said: ${userInput}\nRelevant medical textbook guidance: ${textbookResult.text}\nBased on this, what should I ask next?`;
+
+    const response = await chain.call({ input: combinedInput });
     console.log('Assistant response:', response.response);
     return response.response;
   } catch (error) {
@@ -104,22 +152,22 @@ app.post('/voice', async (req, res) => {
 
       // If the assistant indicates that the call should end
       if (langChainResponse.includes("I will now hang up")) {
-        twiml.say({ voice: 'alice' }, langChainResponse);
+        twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);
         twiml.hangup(); // Hang up the call politely
       } else {
         // Continue the conversation
-        twiml.say({ voice: 'alice' }, langChainResponse);
+        twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);
 
         const gather = twiml.gather({
           input: 'speech',
           speechTimeout: 'auto',
           action: '/voice',
         });
-        gather.say({ voice: 'alice' });
+        gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' });
       }
     } catch (error) {
       console.error('Error processing request:', error);
-      twiml.say({ voice: 'alice' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
+      twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
       twiml.redirect('/voice');
     }
   } else {
@@ -128,7 +176,7 @@ app.post('/voice', async (req, res) => {
       speechTimeout: 'auto',
       action: '/voice',
     });
-    gather.say({ voice: 'alice' }, 'Hello, I\'m your nurse for today. Can I have your name, please?');
+    gather.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, 'Hello, I\'m your AI medical assistant for today. Can I have your name, please?');
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
@@ -145,7 +193,6 @@ app.post('/call-status', (req, res) => {
   // Perform cleanup operations
   if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {
     clearConversationMemory(callSid);
-
     logCallDetails(callSid, callStatus);
   }
 
@@ -154,10 +201,19 @@ app.post('/call-status', (req, res) => {
 
 function clearConversationMemory(callSid) {
   console.log(`Clearing conversation memory for call ${callSid}`);
+  // Reset patientData for the next call
+  patientData = {
+    name: null,
+    age: null,
+    idNumber: null,
+    symptoms: null,
+    loopCount: 0
+  };
 }
 
 function logCallDetails(callSid, callStatus) {
   console.log(`Logging details for call ${callSid} with final status ${callStatus}`);
+  // Implement your logging logic here
 }
 
 const port = process.env.PORT || 3000;
