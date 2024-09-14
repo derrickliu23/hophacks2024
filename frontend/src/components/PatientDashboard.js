@@ -58,62 +58,65 @@ const UrgentIndicator = () => {
 };
 
 const PatientCard = ({ patient, onClick }) => (
-  <div 
-    onClick={onClick}
-    style={{
-      ...styles.card,
-      boxShadow: patient.isUrgent 
-        ? '0 0 15px rgba(255,0,0,0.5)' // Red shadow for urgent cases
-        : styles.card.boxShadow,
-      cursor: 'pointer',
-      transition: 'transform 0.2s, box-shadow 0.3s ease',
-    }}
-    onMouseOver={(e) => {
-      e.currentTarget.style.transform = 'scale(1.05)';
-      e.currentTarget.style.boxShadow = patient.isUrgent 
-        ? '0 0 20px rgba(255,0,0,0.7)'
-        : '0 8px 16px rgba(0, 0, 0, 0.2)';
-    }}
-    onMouseOut={(e) => {
-      e.currentTarget.style.transform = 'scale(1)';
-      e.currentTarget.style.boxShadow = patient.isUrgent 
-        ? '0 0 15px rgba(255,0,0,0.5)'
-        : styles.card.boxShadow;
-    }}
-  >
-    {patient.isUrgent && <UrgentIndicator />}
-    <div style={{
-      ...styles.cardHeader,
-      backgroundColor: patient.isUrgent ? '#FF0000' : styles.cardHeader.backgroundColor, // Red background for urgent cases
-      color: patient.isUrgent ? 'white' : styles.cardHeader.color, // Ensure text is white on red background
-    }}>
-      {patient.name}
+    <div 
+      onClick={onClick}
+      style={{
+        ...styles.card,
+        boxShadow: patient.isUrgent 
+          ? '0 0 15px rgba(255,0,0,0.5)' // Red shadow for urgent cases
+          : styles.card.boxShadow,
+        cursor: 'pointer',
+        transition: 'transform 0.2s, box-shadow 0.3s ease',
+      }}
+      onMouseOver={(e) => {
+        e.currentTarget.style.transform = 'scale(1.05)';
+        e.currentTarget.style.boxShadow = patient.isUrgent 
+          ? '0 0 20px rgba(255,0,0,0.7)'
+          : '0 8px 16px rgba(0, 0, 0, 0.2)';
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = patient.isUrgent 
+          ? '0 0 15px rgba(255,0,0,0.5)'
+          : styles.card.boxShadow;
+      }}
+    >
+      {patient.isUrgent && <UrgentIndicator />}
+      <div style={{
+        ...styles.cardHeader,
+        backgroundColor: patient.isUrgent ? '#FF0000' : styles.cardHeader.backgroundColor, // Red background for urgent cases
+        color: patient.isUrgent ? 'white' : styles.cardHeader.color, // Ensure text is white on red background
+      }}>
+        {patient.name}
+      </div>
+      <div style={styles.cardContent}>
+        <p><strong>Age:</strong> {patient.personalInfo.age}</p>
+        <p><strong>Gender:</strong> {patient.personalInfo.gender}</p>
+        <p><strong>Contact:</strong> {patient.personalInfo.contact}</p>
+        <p><strong>Current Problem:</strong> {patient.currentProblem}</p>
+      </div>
     </div>
-    <div style={styles.cardContent}>
-      <p><strong>Age:</strong> {patient.personalInfo.age}</p>
-      <p><strong>Gender:</strong> {patient.personalInfo.gender}</p>
-      <p><strong>Contact:</strong> {patient.personalInfo.contact}</p>
-      <p><strong>Current Problem:</strong> {patient.currentProblem}</p>
-    </div>
-  </div>
-);
+  );
+  
 
 const PatientDetailedInfo = ({ patient }) => (
-  <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', maxWidth: '800px', margin: '2rem auto' }}>
-    <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>{patient.name} - Detailed Information</h2>
-    <p><strong>Age:</strong> {patient.personalInfo.age}</p>
-    <p><strong>Gender:</strong> {patient.personalInfo.gender}</p>
-    <p><strong>Contact:</strong> {patient.personalInfo.contact}</p>
-    <p><strong>Current Problem:</strong> {patient.currentProblem}</p>
-    <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
-      <h3 style={{ color: '#3498db', marginBottom: '1rem' }}>Additional Details (Placeholder)</h3>
-      <p><strong>Medical History:</strong> Placeholder for detailed medical history</p>
-      <p><strong>Medications:</strong> Placeholder for current medications</p>
-      <p><strong>Lab Results:</strong> Placeholder for recent lab results</p>
-      <p><strong>Treatment Plan:</strong> Placeholder for current treatment plan</p>
+    <div style={styles.detailedInfoContainer}>
+      <h2 style={styles.detailedInfoTitle}>{patient.name} - Detailed Information</h2>
+      <div style={styles.detailedInfoBox}>
+        <p><strong>Age:</strong> {patient.personalInfo.age}</p>
+        <p><strong>Gender:</strong> {patient.personalInfo.gender}</p>
+        <p><strong>Contact:</strong> {patient.personalInfo.contact}</p>
+        <p><strong>Current Problem:</strong> {patient.currentProblem}</p>
+      </div>
+      <div style={styles.additionalDetailsBox}>
+        <h3 style={styles.additionalDetailsTitle}>Additional Details</h3>
+        <p><strong>Medical History:</strong> Placeholder for detailed medical history</p>
+        <p><strong>Medications:</strong> Placeholder for current medications</p>
+        <p><strong>Lab Results:</strong> Placeholder for recent lab results</p>
+        <p><strong>Treatment Plan:</strong> Placeholder for current treatment plan</p>
+      </div>
     </div>
-  </div>
-);
+  );
 
 const PatientDashboard = () => {
   const { logout } = useAuth0();
@@ -181,9 +184,9 @@ const styles = {
     alignItems: 'center',
   },
   logoutButton: {
-    position: 'absolute',
-    top: '40px',
-    right: '40px',
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
     backgroundColor: '#ff4d4d',
     color: 'white',
     padding: '10px 20px',
@@ -191,6 +194,7 @@ const styles = {
     borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: 'bold',
+    zIndex: 10, // Ensure it is above other content
   },
   header: {
     backgroundColor: '#3498db',
@@ -211,24 +215,31 @@ const styles = {
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: '20px',
+    flex: 1,
   },
   card: {
-    width: '300px',
     backgroundColor: 'white',
     borderRadius: '8px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     overflow: 'hidden',
     position: 'relative',
+    padding: '1rem', // Added padding to ensure content is contained
+    margin: '0.5rem', // Adjusted margin to prevent overflow
+    maxWidth: '300px', // Minimum width to ensure card doesn't shrink too much
+    maxHeight: '300px', // Allow card to expand as needed
+    display: 'flex',
+    flexDirection: 'column',
+    overflowY: 'auto', // Allow scrolling if content overflows
   },
   cardHeader: {
     backgroundColor: '#3498db',
     color: 'white',
-    padding: '16px',
+    padding: '0.5rem',
     fontWeight: 'bold',
     fontSize: '1.2rem',
   },
   cardContent: {
-    padding: '16px',
+    padding: '1rem',
   },
   backButton: {
     display: 'block',
@@ -239,6 +250,35 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  detailedInfoContainer: {
+    padding: '2rem',
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    maxWidth: '800px',
+    margin: '2rem auto',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+  },
+  detailedInfoTitle: {
+    color: '#3498db',
+    marginBottom: '1rem',
+  },
+  detailedInfoBox: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: '8px',
+    padding: '1rem',
+    marginBottom: '1rem',
+    border: '1px solid #ddd',
+  },
+  additionalDetailsBox: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: '8px',
+    padding: '1rem',
+    border: '1px solid #ddd',
+  },
+  additionalDetailsTitle: {
+    color: '#3498db',
+    marginBottom: '1rem',
   },
 };
 
