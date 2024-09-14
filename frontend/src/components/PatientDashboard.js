@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TranslatableText } from './TranslationContext'; // Import the TranslatableText component
+import axios from 'axios';
 
 const patientsData = {
   "JD001": {
@@ -134,6 +135,20 @@ const PatientDetailedInfo = ({ patient }) => (
         return a.isUrgent ? -1 : 1;
       });
     }, []);
+
+    /*
+     useEffect(() => {
+        const fetchPatients = async () => {
+          try {
+            const response = await axios.get('http://localhost:5000/patients');
+            setPatients(response.data);
+          } catch (err) {
+            console.error(err);
+          }
+        };
+        fetchPatients();
+    }, []);
+    */
   
     return (
       <div style={styles.dashboard}>
