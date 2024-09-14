@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+const backgroundColor = '#E0F7FA';
 
 const patientsData = {
  "JD001": {
@@ -48,7 +48,7 @@ const PatientDashboard = () => {
 
 
  return (
-   <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f0f0f0' }}>
+   <div style={{ display: 'flex', height: '100vh', backgroundColor: backgroundColor }}>
      {isMenuOpen && (
        <div style={{ width: '250px', backgroundColor: 'white', padding: '16px' }}>
          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Patients</h2>
