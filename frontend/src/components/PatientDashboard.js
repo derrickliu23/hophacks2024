@@ -46,6 +46,19 @@ const PatientDashboard = () => {
 
  const toggleMenu = () => setIsMenuOpen(prev => !prev);
 
+ const buttonStyle = (tabName) => ({
+   backgroundColor: activeTab === tabName ? '#4caf50' : '#f0f0f0',
+   color: activeTab === tabName ? '#fff' : '#000',
+   border: 'none',
+   padding: '10px 20px',
+   marginRight: '10px',
+   cursor: 'pointer',
+   borderRadius: '5px',
+   display: 'flex',
+   alignItems: 'center'
+ });
+
+ const iconStyle = { marginRight: '8px' };
 
  return (
    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#e0f7fa' }}>
@@ -94,9 +107,11 @@ const PatientDashboard = () => {
          >
            Toggle Menu
          </button>
-         <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px' }}>
-           <h2 style={{ fontSize: '24px', marginBottom: '16px', color: '#0d47a1' }}>{patientData.name}</h2>
-           <div style={{ marginBottom: '16px' }}>
+         <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
+           <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>{patientData.name}</h2>
+           
+           {/* Flexbox Container for the Buttons */}
+           <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
              <button
                onClick={() => setActiveTab("personal-info")}
                style={{
@@ -110,6 +125,7 @@ const PatientDashboard = () => {
                  transition: 'background-color 0.3s ease'
                }}
              >
+               <i className="fas fa-user" style={iconStyle}></i>
                Personal Info
              </button>
              <button
@@ -125,6 +141,7 @@ const PatientDashboard = () => {
                  transition: 'background-color 0.3s ease'
                }}
              >
+               <i className="fas fa-file-medical" style={iconStyle}></i>
                Medical Records
              </button>
              <button
@@ -139,6 +156,7 @@ const PatientDashboard = () => {
                  transition: 'background-color 0.3s ease'
                }}
              >
+               <i className="fas fa-stethoscope" style={iconStyle}></i>
                Current Problem
              </button>
            </div>
