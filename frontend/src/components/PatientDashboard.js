@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-const backgroundColor = '#E0F7FA';
+
 
 const patientsData = {
  "JD001": {
@@ -34,29 +34,23 @@ const patientsData = {
  }
 };
 
+
 const PatientDashboard = () => {
  const [selectedPatient, setSelectedPatient] = useState("JD001");
  const [isMenuOpen, setIsMenuOpen] = useState(true);
  const [activeTab, setActiveTab] = useState("personal-info");
 
+
  const patientData = patientsData[selectedPatient];
+
 
  const toggleMenu = () => setIsMenuOpen(prev => !prev);
 
- const buttonStyle = (tabName) => ({
-   backgroundColor: activeTab === tabName ? '#4caf50' : '#f0f0f0',
-   color: activeTab === tabName ? '#fff' : '#000',
-   border: 'none',
-   padding: '10px 20px',
-   marginRight: '10px',
-   cursor: 'pointer',
-   borderRadius: '5px'
- });
 
  return (
-   <div style={{ display: 'flex', height: '100vh', backgroundColor: backgroundColor }}>
+   <div style={{ display: 'flex', height: '100vh', backgroundColor: '#e0f7fa' }}>
      {isMenuOpen && (
-       <div style={{ width: '250px', backgroundColor: 'white', padding: '16px' }}>
+       <div style={{ width: '250px', backgroundColor: '#1976d2', padding: '16px', color: 'white' }}>
          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Patients</h2>
          {Object.entries(patientsData).map(([id, patient]) => (
            <button
@@ -65,11 +59,14 @@ const PatientDashboard = () => {
                display: 'flex',
                alignItems: 'center',
                width: '100%',
-               padding: '8px',
-               marginBottom: '8px',
-               backgroundColor: selectedPatient === id ? '#e6f2ff' : 'transparent',
+               padding: '12px',
+               marginBottom: '12px',
+               backgroundColor: selectedPatient === id ? '#90caf9' : 'transparent',
+               color: 'white',
                border: 'none',
-               cursor: 'pointer'
+               borderRadius: '8px',
+               cursor: 'pointer',
+               transition: 'background-color 0.3s ease'
              }}
              onClick={() => setSelectedPatient(id)}
            >
@@ -79,34 +76,72 @@ const PatientDashboard = () => {
        </div>
      )}
 
-     <div style={{ flex: 1, overflow: 'hidden' }}>
+
+     <div style={{ flex: 1, overflow: 'hidden', backgroundColor: '#bbdefb' }}>
        <div style={{ padding: '16px' }}>
-         <button onClick={toggleMenu} style={{ marginBottom: '16px' }}>
+         <button
+           onClick={toggleMenu}
+           style={{
+             marginBottom: '16px',
+             padding: '10px 16px',
+             backgroundColor: '#1976d2',
+             color: 'white',
+             border: 'none',
+             borderRadius: '8px',
+             cursor: 'pointer',
+             transition: 'background-color 0.3s ease'
+           }}
+         >
            Toggle Menu
          </button>
-         <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
-           <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>{patientData.name}</h2>
-           <div>
+         <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px' }}>
+           <h2 style={{ fontSize: '24px', marginBottom: '16px', color: '#0d47a1' }}>{patientData.name}</h2>
+           <div style={{ marginBottom: '16px' }}>
              <button
                onClick={() => setActiveTab("personal-info")}
-               style={buttonStyle("personal-info")}
+               style={{
+                 marginRight: '12px',
+                 padding: '8px 16px',
+                 backgroundColor: activeTab === "personal-info" ? '#1976d2' : '#e3f2fd',
+                 color: activeTab === "personal-info" ? 'white' : '#0d47a1',
+                 border: 'none',
+                 borderRadius: '8px',
+                 cursor: 'pointer',
+                 transition: 'background-color 0.3s ease'
+               }}
              >
                Personal Info
              </button>
              <button
                onClick={() => setActiveTab("medical-records")}
-               style={buttonStyle("medical-records")}
+               style={{
+                 marginRight: '12px',
+                 padding: '8px 16px',
+                 backgroundColor: activeTab === "medical-records" ? '#1976d2' : '#e3f2fd',
+                 color: activeTab === "medical-records" ? 'white' : '#0d47a1',
+                 border: 'none',
+                 borderRadius: '8px',
+                 cursor: 'pointer',
+                 transition: 'background-color 0.3s ease'
+               }}
              >
                Medical Records
              </button>
              <button
                onClick={() => setActiveTab("current-problem")}
-               style={buttonStyle("current-problem")}
+               style={{
+                 padding: '8px 16px',
+                 backgroundColor: activeTab === "current-problem" ? '#1976d2' : '#e3f2fd',
+                 color: activeTab === "current-problem" ? 'white' : '#0d47a1',
+                 border: 'none',
+                 borderRadius: '8px',
+                 cursor: 'pointer',
+                 transition: 'background-color 0.3s ease'
+               }}
              >
                Current Problem
              </button>
            </div>
-
            {activeTab === "personal-info" && (
              <div>
                <p>Age: {patientData.personalInfo.age}</p>
@@ -142,5 +177,6 @@ const PatientDashboard = () => {
    </div>
  );
 };
+
 
 export default PatientDashboard;
