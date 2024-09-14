@@ -71,8 +71,8 @@ const styles = {
   },
   logoutButton: {
     position: 'absolute',
-    top: '20px',
-    right: '20px',
+    top: '40px',
+    right: '40px',
     backgroundColor: '#ff4d4d',
     color: 'white',
     padding: '10px 20px',
