@@ -139,12 +139,14 @@ const PatientDetailedInfo = ({ patient }) => (
       <div style={styles.dashboard}>
         <div style={styles.header}>
           <div style={styles.titleContainer}>
-            <h1 style={styles.title}>
-              {selectedPatient ? (
-                <TranslatableText>Patient Details</TranslatableText> 
-              ) : (
-                <TranslatableText>Patient Dashboard</TranslatableText> 
-              ) }
+          <h1 style={styles.title}>
+            {selectedPatient ? (
+                <>
+                <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
+                </>
+            ) : (
+                <TranslatableText>Patient Dashboard</TranslatableText>
+            )}
             </h1>
             <button
               style={styles.logoutButton}
