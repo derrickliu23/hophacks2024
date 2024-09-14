@@ -184,6 +184,9 @@ const PatientDashboard = () => {
 const styles = {
   dashboard: {
     position: 'relative',
+    minWidth: '100%',
+    width: 'auto',
+    maxWidth: '1400px',
     minHeight: '100vh',
     backgroundColor: '#ecf0f1',
     padding: '20px',
