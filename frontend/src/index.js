@@ -1,11 +1,18 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import PatientDashboard from './components/PatientDashboard';
+import { createRoot } from 'react-dom/client';
+import { Auth0Provider } from '@auth0/auth0-react';
+import App from './App';
 
+const root = createRoot(document.getElementById('root'));
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
- <React.StrictMode>
-   <PatientDashboard />
- </React.StrictMode>
+<Auth0Provider
+    domain="dev-o8axeyog85h8xeej.us.auth0.com"
+    clientId="olUFl5B3XEN7nascxLeYjsiD4OeAZE8S"
+    authorizationParams={{
+      redirect_uri: "http://localhost:3000"
+    }}
+  >
+    <App />
+  </Auth0Provider>,
 );
