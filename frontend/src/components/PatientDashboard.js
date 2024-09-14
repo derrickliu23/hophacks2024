@@ -47,7 +47,7 @@ const PatientDashboard = () => {
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: '#e0f7fa', fontFamily: 'SUSE, sans-serif' }}>
       {isMenuOpen && (
-        <div style={{ width: '250px', backgroundColor: '#1976d2', padding: '16px', color: 'white' }}>
+        <div style={{ width: '250px', backgroundColor: '#1976d2', padding: '16px', color: 'white', fontFamily: 'inherit' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '16px' }}>Patients</h2>
           {Object.entries(patientsData).map(([id, patient]) => (
             <button
@@ -64,7 +64,8 @@ const PatientDashboard = () => {
                 borderRadius: '8px',
                 cursor: 'pointer',
                 transition: 'background-color 0.3s ease',
-                fontSize: '16px'
+                fontSize: '16px',
+                fontFamily: 'inherit' // Ensures font consistency
               }}
               onClick={() => setSelectedPatient(id)}
             >
@@ -75,8 +76,7 @@ const PatientDashboard = () => {
       )}
 
       <div style={{ flex: 1, overflow: 'hidden', backgroundColor: '#bbdefb' }}>
-        <div style={{ padding: '16px', position: 'relative' }}>
-          {/* Toggle button placed above the main content */}
+        <div style={{ padding: '16px', position: 'relative', fontFamily: 'inherit' }}>
           <button
             onClick={toggleMenu}
             style={{
@@ -95,7 +95,6 @@ const PatientDashboard = () => {
               justifyContent: 'center'
             }}
           >
-            {/* SVG icon for the menu */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 6H20V8H4V6ZM4 11H20V13H4V11ZM4 16H20V18H4V16Z" fill="white"/>
             </svg>
@@ -104,7 +103,6 @@ const PatientDashboard = () => {
             <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '4px' }}>
               <h2 style={{ fontSize: '26px', marginBottom: '16px', fontWeight: '700' }}>{patientData.name}</h2>
               
-              {/* Flexbox Container for the Buttons */}
               <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
                 <button
                   onClick={() => setActiveTab("personal-info")}
@@ -118,6 +116,7 @@ const PatientDashboard = () => {
                     cursor: 'pointer',
                     transition: 'background-color 0.3s ease',
                     fontSize: '16px',
+                    fontFamily: 'inherit',
                     display: 'flex',
                     alignItems: 'center'
                   }}
@@ -137,6 +136,7 @@ const PatientDashboard = () => {
                     cursor: 'pointer',
                     transition: 'background-color 0.3s ease',
                     fontSize: '16px',
+                    fontFamily: 'inherit',
                     display: 'flex',
                     alignItems: 'center'
                   }}
@@ -155,6 +155,7 @@ const PatientDashboard = () => {
                     cursor: 'pointer',
                     transition: 'background-color 0.3s ease',
                     fontSize: '16px',
+                    fontFamily: 'inherit',
                     display: 'flex',
                     alignItems: 'center'
                   }}
