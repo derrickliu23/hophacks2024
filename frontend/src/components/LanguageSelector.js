@@ -14,15 +14,14 @@ const LanguageSelector = ({ onLanguageChange }) => {
 
   const buttonStyle = {
     position: 'absolute',
-    top: '10px',
-    left: '10px',
-    padding: '10px 15px',
-    backgroundColor: '#4CAF50',
+    left: '30px', // Distance from the left edge of the viewport
+    backgroundColor: '#ff4d4d',
     color: 'white',
+    padding: '10px 20px',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    zIndex: 1000,
+    fontWeight: 'bold',
   };
 
   const dropdownStyle = {

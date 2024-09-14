@@ -102,158 +102,174 @@ const PatientCard = ({ patient, onClick }) => (
 );
 
 const PatientDetailedInfo = ({ patient }) => (
-  <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', maxWidth: '800px', margin: '2rem auto' }}>
-    <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>
-      {patient.name} - <TranslatableText>Detailed Information</TranslatableText>
-    </h2>
-    <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age}</p>
-    <p><strong><TranslatableText>Gender:</TranslatableText></strong> {patient.personalInfo.gender}</p>
-    <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact}</p>
-    <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem}</p>
-    <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
-      <h3 style={{ color: '#3498db', marginBottom: '1rem' }}>
-        <TranslatableText>Additional Details (Placeholder)</TranslatableText>
-      </h3>
-      <p><strong><TranslatableText>Medical History:</TranslatableText></strong> <TranslatableText>Placeholder for detailed medical history</TranslatableText></p>
-      <p><strong><TranslatableText>Medications:</TranslatableText></strong> <TranslatableText>Placeholder for current medications</TranslatableText></p>
-      <p><strong><TranslatableText>Lab Results:</TranslatableText></strong> <TranslatableText>Placeholder for recent lab results</TranslatableText></p>
-      <p><strong><TranslatableText>Treatment Plan:</TranslatableText></strong> <TranslatableText>Placeholder for current treatment plan</TranslatableText></p>
-    </div>
-  </div>
-);
-
-const PatientDashboard = () => {
-  const { logout } = useAuth0();
-  const [selectedPatient, setSelectedPatient] = useState(null);
-
-  const sortedPatients = useMemo(() => {
-    return Object.entries(patientsData).sort(([, a], [, b]) => {
-      if (a.isUrgent === b.isUrgent) {
-        return 0;
-      }
-      return a.isUrgent ? -1 : 1;
-    });
-  }, []);
-
-  return (
-    <div style={styles.dashboard}>
-      <button
-        style={styles.logoutButton}
-        onClick={() => logout({ returnTo: window.location.origin })}
-      >
-        <TranslatableText>Log Out</TranslatableText>
-      </button>
-
-      <div style={styles.header}>
-        <h1 style={styles.title}>
-          {selectedPatient ? (
-            <TranslatableText>Patient Details:</TranslatableText> + selectedPatient.name
-          ) : (
-            <TranslatableText>Patient Dashboard</TranslatableText>
-          )}
-        </h1>
+    <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '1000px', margin: '2rem auto', boxSizing: 'border-box' }}>
+      <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>
+        {patient.name} - <TranslatableText>Detailed Information</TranslatableText>
+      </h2>
+      <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age}</p>
+      <p><strong><TranslatableText>Gender:</TranslatableText></strong> {patient.personalInfo.gender}</p>
+      <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact}</p>
+      <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem}</p>
+      <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f0f0', borderRadius: '8px', boxSizing: 'border-box' }}>
+        <h3 style={{ color: '#3498db', marginBottom: '1rem' }}>
+          <TranslatableText>Additional Details (Placeholder)</TranslatableText>
+        </h3>
+        <p><strong><TranslatableText>Medical History:</TranslatableText></strong> <TranslatableText>Placeholder for detailed medical history</TranslatableText></p>
+        <p><strong><TranslatableText>Medications:</TranslatableText></strong> <TranslatableText>Placeholder for current medications</TranslatableText></p>
+        <p><strong><TranslatableText>Lab Results:</TranslatableText></strong> <TranslatableText>Placeholder for recent lab results</TranslatableText></p>
+        <p><strong><TranslatableText>Treatment Plan:</TranslatableText></strong> <TranslatableText>Placeholder for current treatment plan</TranslatableText></p>
       </div>
-
-      <div style={styles.content}>
-        {selectedPatient ? (
-          <PatientDetailedInfo patient={selectedPatient} />
-        ) : (
-          sortedPatients.map(([id, patient]) => (
-            <PatientCard 
-              key={id} 
-              patient={patient} 
-              onClick={() => setSelectedPatient(patient)}
-            />
-          ))
-        )}
-      </div>
-
-      {selectedPatient && (
-        <button
-          onClick={() => setSelectedPatient(null)}
-          style={styles.backButton}
-        >
-          <TranslatableText>Back to Dashboard</TranslatableText>
-        </button>
-      )}
     </div>
   );
-};
 
-// Styles
-const styles = {
-  dashboard: {
-    position: 'relative',
-    minWidth: '100%',
-    width: 'auto',
-    maxWidth: '1400px',
-    minHeight: '100vh',
-    backgroundColor: '#ecf0f1',
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  logoutButton: {
-    position: 'absolute',
-    top: '40px',
-    right: '40px',
-    backgroundColor: '#ff4d4d',
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-  header: {
-    backgroundColor: '#3498db',
-    width: '100%',
-    padding: '20px',
-    textAlign: 'center',
-    color: 'white',
-    borderRadius: '8px',
-    marginBottom: '20px',
-  },
-  title: {
-    margin: '0',
-    fontSize: '2rem',
-  },
-  content: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    width: '100%',
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
-    padding: '20px',
-    position: 'relative',
-    transition: 'transform 0.2s ease, box-shadow 0.3s ease',
-  },
-  cardHeader: {
-    fontSize: '1.2rem',
-    fontWeight: 'bold',
-    backgroundColor: '#3498db',
-    color: 'white',
-    padding: '10px',
-    borderRadius: '8px',
-  },
-  cardContent: {
-    marginTop: '10px',
-  },
-  backButton: {
-    marginTop: '20px',
-    backgroundColor: '#3498db',
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-};
+  const PatientDashboard = () => {
+    const { logout } = useAuth0();
+    const [selectedPatient, setSelectedPatient] = useState(null);
+  
+    const sortedPatients = useMemo(() => {
+      return Object.entries(patientsData).sort(([, a], [, b]) => {
+        if (a.isUrgent === b.isUrgent) {
+          return 0;
+        }
+        return a.isUrgent ? -1 : 1;
+      });
+    }, []);
+  
+    return (
+      <div style={styles.dashboard}>
+        <div style={styles.header}>
+          <div style={styles.titleContainer}>
+            <h1 style={styles.title}>
+              {selectedPatient ? (
+                <TranslatableText>Patient Details:</TranslatableText> + selectedPatient.name
+              ) : (
+                <TranslatableText>Patient Dashboard</TranslatableText>
+              )}
+            </h1>
+            <button
+              style={styles.logoutButton}
+              onClick={() => logout({ returnTo: window.location.origin })}
+            >
+              <TranslatableText>Log Out</TranslatableText>
+            </button>
+          </div>
+        </div>
+  
+        <div style={styles.content}>
+          {selectedPatient ? (
+            <PatientDetailedInfo patient={selectedPatient} />
+          ) : (
+            sortedPatients.map(([id, patient]) => (
+              <PatientCard 
+                key={id} 
+                patient={patient} 
+                onClick={() => setSelectedPatient(patient)}
+              />
+            ))
+          )}
+        </div>
+  
+        {selectedPatient && (
+          <button
+            onClick={() => setSelectedPatient(null)}
+            style={styles.backButton}
+          >
+            <TranslatableText>Back to Dashboard</TranslatableText>
+          </button>
+        )}
+      </div>
+    );
+  };
+  
+  //Styles
+  const styles = {
+    dashboard: {
+      minHeight: '100vh',
+      width: '100vw',
+      backgroundColor: '#ecf0f1',
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      margin: '0',
+      boxSizing: 'border-box',
+    },
+    header: {
+      backgroundColor: '#3498db',
+      width: '100%',
+      padding: '20px',
+      display: 'flex',
+      alignItems: 'center', // Vertically centers items in the header
+      justifyContent: 'center', // Centers title horizontally
+      position: 'relative', // Establishes positioning context
+      boxSizing: 'border-box',
+    },
+    titleContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      position: 'relative',
+    },
+    title: {
+      margin: '0',
+      fontSize: '2rem',
+      color: 'white',
+      textAlign: 'center',
+      flex: 1,
+    },
+    logoutButton: {
+      position: 'absolute',
+      right: '30px', // Distance from the right edge of the viewport
+      backgroundColor: '#ff4d4d',
+      color: 'white',
+      padding: '10px 20px',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+    },
+    content: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: '20px',
+      width: '100%',
+      boxSizing: 'border-box',
+    },
+    card: {
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
+      padding: '20px',
+      position: 'relative',
+      transition: 'transform 0.2s ease, box-shadow 0.3s ease',
+      boxSizing: 'border-box',
+    },
+    cardHeader: {
+      fontSize: '1.2rem',
+      fontWeight: 'bold',
+      backgroundColor: '#3498db',
+      color: 'white',
+      padding: '10px',
+      borderRadius: '8px',
+    },
+    cardContent: {
+      marginTop: '10px',
+    },
+    backButton: {
+      marginTop: '20px',
+      backgroundColor: '#3498db',
+      color: 'white',
+      padding: '10px 20px',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+    },
+  };
+  
+  
+  
+  
 
 export default PatientDashboard;
