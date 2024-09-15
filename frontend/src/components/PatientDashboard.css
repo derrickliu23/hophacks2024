@@ -7,3 +7,19 @@
   width: 100%;
   max-width: 600px;
 }
+.patient-card {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+
+.patient-card h2 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.patient-card p {
+  margin: 5px 0;
+}
