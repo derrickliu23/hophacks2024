@@ -1,19 +1,21 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { ChatOpenAI } = require("@langchain/openai");
-const { BufferMemory } = require("langchain/memory");
-const { ConversationChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
 const { OpenAIEmbeddings } = require("@langchain/openai");
 const { MemoryVectorStore } = require("langchain/vectorstores/memory");
-const { RetrievalQAChain } = require("langchain/chains");
-
-process.env.OPENAI_API_KEY = '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';
-
 const Twilio = require('twilio');
 const fs = require('fs');
 const pdf = require('pdf-parse');
+
+process.env.OPENAI_API_KEY = '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';
+
+const model = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  modelName: "gpt-4-turbo",
+  temperature: 0.7,
+});
 
 mongoose.connect('mongodb://localhost:27017/medicalApp', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
@@ -43,19 +45,42 @@ async function processMedicalTextbook() {
   return vectorStore;
 }
 
-const systemMessage = "You are an AI assistant conducting patient assessments. Use the medical textbook information to ask appropriate questions about the patient's symptoms, medical history, and current condition. Ask no more than one question at a time. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Once you have gathered all relevant information, offer to end the call.";
+const stages = [
+  'name',
+  'age',
+  'id',
+  'sexAtBirth',
+  'symptoms',
+  'medical_history',
+  'lifestyle',
+  'family_history',
+  'current_medications',
+  'conclusion'
+];
 
-const model = new ChatOpenAI({
-  openAIApiKey: process.env.OPENAI_API_KEY,
-  modelName: "gpt-4-turbo",
-  temperature: 0.7,
-});
+let conversationState = {
+  stage: stages[0],
+  patientData: {},
+  discussedTopics: new Set(),
+  questionCount: 0,
+  conversationHistory: ''
+};
 
-const memory = new BufferMemory({
-  returnMessages: true,
-  memoryKey: "history",
-  inputKey: "input"
-});
+const defaultQuestions = {
+  name: "What is your name?",
+  age: "What is your age?",
+  id: "What is your ID number?",
+  sexAtBirth: "What is your sex at birth?",
+  symptoms: "Please describe your main symptoms."
+};
+
+const systemMessage = `You are an AI medical assistant conducting a patient assessment. 
+Current conversation stage: {stage}
+Patient data so far: {patientData}
+Topics discussed: {discussedTopics}
+
+Use this information to ask appropriate questions. Ask one question at a time and avoid repeating topics.
+If you encounter concerning or sensitive information, acknowledge it appropriately and redirect to relevant medical questions.`;
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", systemMessage],
@@ -63,115 +88,167 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "{history}"]
 ]);
 
-const chain = new ConversationChain({
-  llm: model,
-  memory: memory,
-  prompt: prompt
-});
+async function handleUserInput(userInput) {
+  console.log('Handling user input:', userInput);
 
-let patientData = {
-  name: null,
-  age: null,
-  idNumber: null,
-  symptoms: null,
-  loopCount: 0,
-};
+  updateConversationState(userInput);
 
-let discussedTopics = new Set();
-let conversationStage = 0;
-const stages = ['initial symptoms', 'detailed symptoms', 'medical history', 'lifestyle factors', 'family history', 'current medications'];
+  if (conversationState.stage === 'conclusion') {
+    return concludeConversation();
+  }
 
-async function queryLangChain(userInput) {
+  const nextQuestion = getNextQuestion();
+  
+  if (nextQuestion) {
+    conversationState.conversationHistory += "\nPatient: " + userInput + "\nAI: " + nextQuestion;
+    return nextQuestion;
+  }
+
+  // If we've asked all default questions, proceed with AI-generated questions
+  const messages = [
+    { role: "system", content: systemMessage.replace('{stage}', conversationState.stage)
+                               .replace('{patientData}', JSON.stringify(conversationState.patientData))
+                               .replace('{discussedTopics}', Array.from(conversationState.discussedTopics).join(',')) },
+    { role: "human", content: conversationState.conversationHistory + "\nPatient: " + userInput }
+  ];
+
   try {
-    console.log('Patient input:', userInput);
-
-    if (!patientData.name) {
-      patientData.name = userInput;
-      return `Thank you. Can you please tell me your age?`;
-    }
-
-    if (!patientData.age) {
-      patientData.age = userInput;
-      return `Thanks! Could you please provide your ID number?`;
-    }
-
-    if (!patientData.idNumber) {
-      patientData.idNumber = userInput;
-      return `Thanks for that information! Now, can you describe any symptoms you're experiencing?`;
-    }
-
-    if (!patientData.symptoms) {
-      patientData.symptoms = userInput;
-      return `Thank you for sharing your symptoms. Let's continue. How long have you been experiencing these symptoms?`;
-    }
-
-    if (userInput.toLowerCase().includes(patientData.symptoms.toLowerCase())) {
-      patientData.loopCount++;
-    }
-
-    if (patientData.loopCount >= 2) {
-      return `It seems we have covered everything. Thank you for your time. I will now hang up. Have a great day!`;
-    }
-
-    // Use the vector store to find relevant information
-    const relevantDocs = await vectorStore.similaritySearch(userInput, 1);
-    const relevantInfo = relevantDocs[0].pageContent;
-
-    const response = await chain.call({
-      input: `${userInput}\n\nRelevant medical information: ${relevantInfo}`
-    });
-    console.log('Assistant response:', response.response);
-    return response.response;
+    const response = await model.call(messages);
+    conversationState.conversationHistory += "\nPatient: " + userInput + "\nAI: " + response.content;
+    conversationState.questionCount++;
+    return processResponse(response.content);
   } catch (error) {
-    console.error('Error querying LangChain:', error);
-    return "I apologize, but I didn't quite understand. Could you please describe your symptoms or concerns again?";
+    console.error('Error calling ChatOpenAI model:', error);
+    return "I'm sorry, but I encountered an error processing your request. Could you please repeat that?";
   }
 }
 
+
+function updateConversationState(userInput) {
+  console.log('Updating conversation state with:', userInput);
+  
+  conversationState.patientData[conversationState.stage] = userInput;
+  conversationState.discussedTopics.add(conversationState.stage);
+  
+  const currentStageIndex = stages.indexOf(conversationState.stage);
+  if (currentStageIndex < stages.length - 1) {
+    conversationState.stage = stages[currentStageIndex + 1];
+  } else {
+    conversationState.stage = 'conclusion';
+  }
+}
+
+function getNextQuestion() {
+  if (conversationState.stage in defaultQuestions) {
+    return defaultQuestions[conversationState.stage];
+  }
+  return null;
+}
+
+async function concludeConversation() {
+  const summary = await extractSummary(conversationState.conversationHistory);
+
+  // Validate and sanitize the patient data
+  const age = parseInt(conversationState.patientData.age, 10);
+  if (isNaN(age)) {
+    console.error('Invalid age provided:', conversationState.patientData.age);
+    return "There was an issue with the provided age. Please restart the conversation.";
+  }
+
+  const newPatient = new Patient({
+    name: conversationState.patientData.name,
+    age: age,
+    idNumber: conversationState.patientData.id,
+    sexAtBirth: conversationState.patientData.sexAtBirth,
+    personalInfo: {
+      age: age,
+      ID: conversationState.patientData.id,
+      contact: 'N/A'
+    },
+    symptoms: conversationState.patientData.symptoms,
+    transcript: conversationState.conversationHistory.split('\n'),
+    summary: summary,
+    isUrgent: false
+  });
+
+  try {
+    await newPatient.save();
+    console.log('Patient data saved:', newPatient);
+    return "Thank you for your time. I have gathered enough information for now. Is there anything else you'd like to add before we conclude? If not, please hang up.";
+  } catch (error) {
+    console.error('Error saving patient data:', error);
+    return "An error occurred while saving your data. Please try again later.";
+  }
+}
+
+async function extractSummary(conversationHistory) {
+  const prompt = `
+    Based on the following conversation history, extract and summarize the main symptoms mentioned by the patient. 
+
+    Conversation History:
+    ${conversationHistory}
+
+    Summary of Symptoms:
+  `;
+
+  try {
+    const response = await model.call([
+      { role: "system", content: "You are an AI medical assistant." },
+      { role: "user", content: prompt }
+    ]);
+
+    const summary = response.content.trim();
+    return summary;
+  } catch (error) {
+    console.error('Error extracting summary:', error);
+    return 'Unable to generate summary at this time.';
+  }
+}
+
+function processResponse(responseContent) {
+  // Customize this function as needed to handle different responses
+  return responseContent;
+}
+
 app.post('/voice', async (req, res) => {
+  console.log('Request body:', req.body);
   const twiml = new Twilio.twiml.VoiceResponse();
   const speechResult = req.body.SpeechResult;
 
-  if (speechResult) {
+  if (!speechResult) {
+    // Initial greeting
+    twiml.say({ voice: 'alice', language: 'en-US' }, defaultQuestions.name);
+    twiml.gather({
+      input: 'speech',
+      speechTimeout: 'auto',
+      action: '/voice',
+    });
+  } else {
     try {
-      const langChainResponse = await queryLangChain(speechResult);
+      const aiResponse = await handleUserInput(speechResult);
+      twiml.say({ voice: 'alice', language: 'en-US' }, aiResponse);
 
-      if (langChainResponse.toLowerCase().includes("end the call") || langChainResponse.toLowerCase().includes("hang up")) {
-        twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
-        twiml.hangup();
-        const newPatient = new Patient({
-          name: patientData.name,
-          personalInfo: {
-            age: patientData.age,
-            ID: patientData.idNumber,
-            contact: 'N/A'
-          },
-          currentProblem: patientData.symptoms,
-          isUrgent: false
-        });
-        await newPatient.save();
-        console.log('Patient data saved:', newPatient);
-      } else {
-        twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
+      if (conversationState.stage === 'conclusion') {
+        // Wait for user response before hanging up
         const gather = twiml.gather({
           input: 'speech',
           speechTimeout: 'auto',
           action: '/voice',
         });
-        gather.say({ voice: 'alice', language: 'en-US' });
+        gather.say({ voice: 'alice', language: 'en-US' }, 'Is there anything else you would like to discuss before we end the call?');
+      } else {
+        const gather = twiml.gather({
+          input: 'speech',
+          speechTimeout: 'auto',
+          action: '/voice',
+        });
+        gather.say({ voice: 'alice', language: 'en-US' }, 'Please continue.');
       }
     } catch (error) {
       console.error('Error processing request:', error);
-      twiml.say({ voice: 'alice', language: 'en-US' }, 'I apologize, but we encountered an issue. Let\'s start over. How can I assist you today?');
+      twiml.say({ voice: 'alice', language: 'en-US' }, 'I apologize, but we encountered an issue. Let\'s start over. ' + defaultQuestions.name);
       twiml.redirect('/voice');
     }
-  } else {
-    const gather = twiml.gather({
-      input: 'speech',
-      speechTimeout: 'auto',
-      action: '/voice',
-    });
-    gather.say({ voice: 'alice', language: 'en-US' }, 'Hello, I\'m your AI medical assistant for today. Can I have your name, please?');
   }
 
   res.writeHead(200, { 'Content-Type': 'text/xml' });
@@ -179,62 +256,26 @@ app.post('/voice', async (req, res) => {
 });
 
 app.post('/call-status', async (req, res) => {
+  console.log('Call status update received:', req.body);
   const callSid = req.body.CallSid;
   const callStatus = req.body.CallStatus;
   console.log(`Call ${callSid} ended with status: ${callStatus}`);
-
-  if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {
-    const newPatient = new Patient({
-      name: patientData.name,
-      personalInfo: {
-        age: patientData.age,
-        ID: patientData.idNumber,
-        contact: 'N/A'
-      },
-      currentProblem: patientData.symptoms,
-      isUrgent: false
-    });
-    await newPatient.save();
-    console.log('Patient data saved:', newPatient);
-    logCallDetails(callSid, callStatus);
-    clearConversationMemory(callSid);
-    
-    console.log('Recorded Patient Data:', patientData);
+  
+  if (callStatus === 'completed') {
+    console.log(`Call ${callSid} has been completed.`);
+    // Handle post-call activities here, if any
+  } else if (callStatus === 'busy' || callStatus === 'failed') {
+    console.log(`Call ${callSid} was not successful.`);
+    // Handle busy/failed call scenarios here
   }
 
   res.sendStatus(200);
 });
 
-function clearConversationMemory(callSid) {
-  console.log(`Clearing conversation memory for call ${callSid}`);
-  patientData = {
-    name: null,
-    age: null,
-    idNumber: null,
-    symptoms: null,
-    loopCount: 0,
-  };
-  discussedTopics.clear();
-  conversationStage = 0;
-}
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
 
-function logCallDetails(callSid, callStatus) {
-  console.log(`Logging details for call ${callSid} with final status ${callStatus}`);
-  // Implement your logging logic here
-}
+// Start processing the medical textbook when the server starts
+processMedicalTextbook().catch(err => console.error('Error processing medical textbook:', err));
 
-const port = process.env.PORT || 3000;
-
-// Wrap the server start in an async function
-(async () => {
-  try {
-    await processMedicalTextbook();
-    console.log('Medical textbook processed and added to in-memory vector store');
-    
-    app.listen(port, () => {
-      console.log(`App listening at http://localhost:${port}`);
-    });
-  } catch (error) {
-    console.error('Error processing medical textbook:', error);
-  }
-})();
