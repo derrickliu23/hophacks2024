@@ -130,7 +130,7 @@ const PatientDetailedInfo = ({ patient, onArchive, onUnarchive }) => {
   };
 
   return (
-    <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '1000px', margin: '2rem auto', boxSizing: 'border-box', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', border: '1px solid #e0e0e0' }}>
+    <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '1000px', margin: '2rem auto', boxSizing: 'border-box', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', border: '1px solid #e0e0e0', position: 'relative' }}>
       <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>
         {patient.name} - <TranslatableText>Detailed Information</TranslatableText>
       </h2>
@@ -154,6 +154,7 @@ const PatientDetailedInfo = ({ patient, onArchive, onUnarchive }) => {
             style={{
               ...styles.archiveButton,
               backgroundColor: '#3498db', // Blue color for unarchive button
+              right: '2rem', // Align with the right side of the container
             }}
           >
             <RefreshCw size={16} style={{ marginRight: '5px' }} />
@@ -162,7 +163,10 @@ const PatientDetailedInfo = ({ patient, onArchive, onUnarchive }) => {
         ) : (
           <button
             onClick={handleArchiveClick}
-            style={styles.archiveButton}
+            style={{
+              ...styles.archiveButton,
+              right: '2rem', // Align with the right side of the container
+            }}
           >
             <Archive size={16} style={{ marginRight: '5px' }} />
             <TranslatableText>Archive Patient</TranslatableText>
@@ -465,8 +469,7 @@ const styles = {
   },
   archiveButton: {
     position: 'absolute',
-    top: '160px',
-    right: '20px',
+    top: '2rem', // Changed from '160px' to '2rem' to match the container's padding
     backgroundColor: '#ff6b6b',
     color: 'white',
     padding: '10px 20px',
