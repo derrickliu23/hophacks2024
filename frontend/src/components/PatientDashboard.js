@@ -2,39 +2,41 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TranslatableText } from './TranslationContext';
 import { Filter, Archive, RefreshCw, AlertTriangle } from 'lucide-react';
+import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+
 
 const fetchAndFormatPatientsData = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/patients'); // Adjust this URL as needed
-      if (!response.ok) throw new Error('Failed to fetch patients data');
-      const data = await response.json();
-      console.log('Fetched data:', data);
-      const initialPatientsData = {};
-      data.forEach(patient => {
-        initialPatientsData[patient.id] = {
-          name: patient.name || 'N/A',
-          idNumber: patient.idNumber || 0,
+  try {
+    const db = getFirestore();
+    const patientsCollection = collection(db, 'patients');
+    const patientsSnapshot = await getDocs(patientsCollection);
+    const initialPatientsData = {};
+    patientsSnapshot.forEach(doc => {
+      const patient = doc.data();
+      initialPatientsData[doc.id] = {
+        name: patient.name || 'N/A',
+        idNumber: patient.idNumber || 0,
+        age: patient.age || 0,
+        sexAtBirth: patient.sexAtBirth,
+        personalInfo: {
           age: patient.age || 0,
-          sexAtBirth: patient.sexAtBirth,
-          personalInfo: {
-            age: patient.age || 0,
-            ID: patient.idNumber || 'N/A',
-            contact: patient.personalInfo.contact || 'N/A',
-          },
-          summary: patient.summary || 'N/A',
-          symptoms: patient.symptoms || 'N/A',
-          transcript: patient.transcript || 'N/A',
-          isUrgent: patient.isUrgent || false,
-          isArchived: false
-        };
-      });
-      return initialPatientsData;
-    } catch (error) {
-      console.error('Error fetching and formatting patients data:', error);
-      return {}; // Return an empty object if there's an error
-    }
-  };
-
+          ID: patient.idNumber || 'N/A',
+          contact: patient.personalInfo?.contact || 'N/A',
+        },
+        summary: patient.summary || 'N/A',
+        symptoms: patient.symptoms || 'N/A',
+        transcript: patient.transcript || 'N/A',
+        isUrgent: patient.isUrgent || false,
+        isArchived: patient.isArchived || false
+      };
+    });
+    console.log('Fetched data:', initialPatientsData);
+    return initialPatientsData;
+  } catch (error) {
+    console.error('Error fetching and formatting patients data:', error);
+    return {};
+  }
+};
 /* const initialPatientsData = {
   "JD001": {
     name: "John Doe",
@@ -253,20 +255,20 @@ const SortButton = ({ currentSort, onSortChange }) => {
 };
 
 const PatientDashboard = () => {
-    const { logout } = useAuth0();
-    const [selectedPatient, setSelectedPatient] = useState(null);
-    const [sortMethod, setSortMethod] = useState('urgent');
-    const [patientsData, setPatientsData] = useState({});
-  
-    useEffect(() => {
-      const fetchData = async () => {
-        console.log('Fetching data...');
-        const data = await fetchAndFormatPatientsData();
-        console.log('Fetched data:', data);
-        setPatientsData(data);
-      };
-      fetchData();
-    }, []);
+  const { logout } = useAuth0();
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [sortMethod, setSortMethod] = useState('urgent');
+  const [patientsData, setPatientsData] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      console.log('Fetching data...');
+      const data = await fetchAndFormatPatientsData();
+      console.log('Fetched data:', data);
+      setPatientsData(data);
+    };
+    fetchData();
+  }, []);
 
     console.log('Patients data in state:', patientsData);
 
@@ -314,7 +316,14 @@ const PatientDashboard = () => {
     }
   }, [sortMethod, patientsData]);
 
-  const handleArchivePatient = (patientId) => {
+  const handleArchivePatient = async (patientId) => {
+    const db = getFirestore();
+    const patientRef = doc(db, 'patients', patientId);
+    await updateDoc(patientRef, {
+      isArchived: true,
+      isUrgent: false
+    });
+
     setPatientsData(prevData => ({
       ...prevData,
       [patientId]: prevData[patientId] ? {
@@ -330,7 +339,13 @@ const PatientDashboard = () => {
     } : null);
   };
 
-  const handleUnarchivePatient = (patientId) => {
+  const handleUnarchivePatient = async (patientId) => {
+    const db = getFirestore();
+    const patientRef = doc(db, 'patients', patientId);
+    await updateDoc(patientRef, {
+      isArchived: false
+    });
+
     setPatientsData(prevData => ({
       ...prevData,
       [patientId]: prevData[patientId] ? {

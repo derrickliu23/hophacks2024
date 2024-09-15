@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const { ChatOpenAI } = require("@langchain/openai");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
@@ -8,20 +7,34 @@ const { MemoryVectorStore } = require("langchain/vectorstores/memory");
 const Twilio = require('twilio');
 const fs = require('fs');
 const pdf = require('pdf-parse');
+const admin = require('firebase-admin');
 
-process.env.OPENAI_API_KEY = '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';
-
+process.env.OPENAI_API_KEY = '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'
 const model = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
   modelName: "gpt-4-turbo",
   temperature: 0.7,
 });
 
-mongoose.connect('mongodb://localhost:27017/medicalApp', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Error connecting to MongoDB:', err));
+// Initialize Firebase
+const serviceAccount = require("C:/Users/benja/Downloads/symptomsync-firebase-adminsdk-fugzi-f6bff711a8.json");
 
-const Patient = require('./backend/models/patient');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://symptomsync.firebaseio.com"
+});
+
+// Check Firebase connection
+admin.firestore().collection('connection_test').add({
+  timestamp: admin.firestore.FieldValue.serverTimestamp()
+}).then(() => {
+  console.log('Successfully connected to Firebase!');
+}).catch((error) => {
+  console.error('Failed to connect to Firebase:', error);
+  process.exit(1);  // Exit the application if we can't connect to Firebase
+});
+
+const db = admin.firestore();
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -213,7 +226,7 @@ async function concludeConversation() {
     return "There was an issue with the provided age. Please restart the conversation.";
   }
 
-  const newPatient = new Patient({
+  const newPatient = {
     name: conversationState.patientData.name,
     age: age,
     idNumber: conversationState.patientData.id,
@@ -221,16 +234,16 @@ async function concludeConversation() {
     personalInfo: {
       age: age,
       ID: conversationState.patientData.id,
-      contact: conversationState.phoneNumber // Add this line to save the phone number
+      contact: conversationState.phoneNumber
     },
     symptoms: conversationState.patientData.symptoms,
     transcript: conversationState.conversationHistory.split('\n'),
     summary: summary,
     isUrgent: false
-  });
+  };
 
   try {
-    await newPatient.save();
+    await db.collection('patients').add(newPatient);
     console.log('Patient data saved:', newPatient);
     return "Thank you for your time. I have gathered enough information for now. Is there anything else you'd like to add before we conclude? If not, please hang up.";
   } catch (error) {
@@ -343,4 +356,3 @@ app.listen(3000, () => {
 
 // Start processing the medical textbook when the server starts
 processMedicalTextbook().catch(err => console.error('Error processing medical textbook:', err));
-
