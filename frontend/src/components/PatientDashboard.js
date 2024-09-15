@@ -1,9 +1,36 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TranslatableText } from './TranslationContext';
 import { Filter, Archive, RefreshCw, AlertTriangle } from 'lucide-react';
 
-const initialPatientsData = {
+const fetchAndFormatPatientsData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/patients'); // Adjust this URL as needed
+      if (!response.ok) throw new Error('Failed to fetch patients data');
+      const data = await response.json();
+      console.log('Fetched data:', data);
+      const initialPatientsData = {};
+      data.forEach(patient => {
+        initialPatientsData[patient.id] = {
+          name: patient.name,
+          personalInfo: {
+            age: patient.personalInfo.age,
+            sex: patient.personalInfo.sex || 'N/A',
+            contact: patient.personalInfo.contact || 'N/A',
+          },
+          currentProblem: patient.currentProblem || 'N/A',
+          isUrgent: patient.isUrgent || false,
+          isArchived: patient.isArchived || false
+        };
+      });
+      return initialPatientsData;
+    } catch (error) {
+      console.error('Error fetching and formatting patients data:', error);
+      return {}; // Return an empty object if there's an error
+    }
+  };
+
+/* const initialPatientsData = {
   "JD001": {
     name: "John Doe",
     personalInfo: { age: 35, sex: "Male", contact: "+1 (555) 123-4567" },
@@ -25,8 +52,7 @@ const initialPatientsData = {
     isUrgent: true,
     isArchived: false
   }
-};
-
+}; */
 const UrgentIndicator = () => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -221,12 +247,22 @@ const SortButton = ({ currentSort, onSortChange }) => {
 };
 
 const PatientDashboard = () => {
-  const { logout } = useAuth0();
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [sortMethod, setSortMethod] = useState('urgent');
-  const [patientsData, setPatientsData] = useState(initialPatientsData);
+    const { logout } = useAuth0();
+    const [selectedPatient, setSelectedPatient] = useState(null);
+    const [sortMethod, setSortMethod] = useState('urgent');
+    const [patientsData, setPatientsData] = useState({});
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        console.log('Fetching data...');
+        const data = await fetchAndFormatPatientsData();
+        console.log('Fetched data:', data);
+        setPatientsData(data);
+      };
+      fetchData();
+    }, []);
 
-  console.log('patientsData:', patientsData);
+    console.log('Patients data in state:', patientsData);
 
   const sortedPatients = useMemo(() => {
     const patients = Object.entries(patientsData);
