@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Patient = require('./models/patient');
 
 // Define your MongoDB connection string
-const uri = 'mongodb://localhost:27017/patients';
+const uri = 'mongodb://localhost:27017/medicalApp';
 
 const fetchPatientNames = async () => {
   try {
