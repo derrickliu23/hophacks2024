@@ -142,6 +142,18 @@ app.post('/voice', async (req, res) => {
       if (langChainResponse.toLowerCase().includes("end the call") || langChainResponse.toLowerCase().includes("hang up")) {
         twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
         twiml.hangup();
+        const newPatient = new Patient({
+          name: patientData.name,
+          personalInfo: {
+            age: patientData.age,
+            gender: 'N/A', // You can capture this during the call
+            contact: 'N/A' // Placeholder for contact information
+          },
+          currentProblem: patientData.symptoms,
+          isUrgent: false // You can implement logic to detect urgency based on symptoms
+        });
+        await newPatient.save();
+        console.log('Patient data saved:', newPatient);
       } else {
         twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
         const gather = twiml.gather({
