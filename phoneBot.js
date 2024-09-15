@@ -148,7 +148,7 @@ app.post('/voice', async (req, res) => {
           name: patientData.name,
           personalInfo: {
             age: patientData.age,
-            gender: 'N/A', // You can capture this during the call
+            ID: patientData.idNumber, // You can capture this during the call
             contact: 'N/A' // Placeholder for contact information
           },
           currentProblem: patientData.symptoms,

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TranslatableText } from './TranslationContext'; // Import the TranslatableText component
-import axios from 'axios';
 
 const patientsData = {
   "JD001": {
@@ -88,7 +87,7 @@ const PatientCard = ({ patient, onClick }) => (
     {patient.isUrgent && <UrgentIndicator />}
     <div style={{
       ...styles.cardHeader,
-      backgroundColor: patient.isUrgent ? '#FF0000' : styles.cardHeader.backgroundColor, // Red background for urgent cases
+      backgroundColor: patient.isUrgent ? '#89CFF0' : styles.cardHeader.backgroundColor, // Red background for urgent cases
       color: patient.isUrgent ? 'white' : styles.cardHeader.color, // Ensure text is white on red background
     }}>
       {patient.name}
@@ -123,150 +122,160 @@ const PatientDetailedInfo = ({ patient, onFinishPatient }) => (
     </div>
   );
 
-  const PatientDashboard = () => {
-    const { logout } = useAuth0();
-    const [selectedPatient, setSelectedPatient] = useState(null);
-  
-    const sortedPatients = useMemo(() => {
-      return Object.entries(patientsData).sort(([, a], [, b]) => {
-        if (a.isUrgent === b.isUrgent) {
-          return 0;
-        }
-        return a.isUrgent ? -1 : 1;
-      });
-    }, []);
-  
-    return (
-      <div style={styles.dashboard}>
-        {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.titleContainer}>
-            <h1 style={styles.title}>
-              {selectedPatient ? (
-                <>
-                  <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
-                </>
-              ) : (
-                <TranslatableText>Patient Dashboard</TranslatableText>
-              )}
-            </h1>
-            <button
-              style={styles.logoutButton}
-              onClick={() => logout({ returnTo: window.location.origin })}
-            >
-              <TranslatableText>Log Out</TranslatableText>
-            </button>
-          </div>
-        </div>
-  
-        {/* Content */}
-        <div style={{ ...styles.content, marginTop: '40px' }}> {/* Added marginTop here */}
+const PatientDashboard = () => {
+  const { logout } = useAuth0();
+  const [selectedPatient, setSelectedPatient] = useState(null);
+
+  const sortedPatients = useMemo(() => {
+    return Object.entries(patientsData).sort(([, a], [, b]) => {
+      if (a.isUrgent === b.isUrgent) {
+        return 0;
+      }
+      return a.isUrgent ? -1 : 1;
+    });
+  }, []);
+
+  return (
+    <div style={styles.dashboard}>
+      <div style={styles.header}>
+        <div style={styles.titleContainer}>
+        <h1 style={styles.title}>
           {selectedPatient ? (
-            <PatientDetailedInfo patient={selectedPatient} />
+              <>
+              <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
+              </>
           ) : (
-            sortedPatients.map(([id, patient]) => (
-              <PatientCard 
-                key={id} 
-                patient={patient} 
-                onClick={() => setSelectedPatient(patient)} 
-              />
-            ))
+              <TranslatableText>Patient Dashboard</TranslatableText>
           )}
+          </h1>
+          <button
+            style={styles.logoutButton}
+            onClick={() => logout({ returnTo: window.location.origin })}
+          >
+            <TranslatableText>Log Out</TranslatableText>
+          </button>
         </div>
       </div>
-    );
-  };
-  
-  
-  //Styles
-  const styles = {
-    dashboard: {
-      minHeight: '100vh',
-      width: '100vw',
-      backgroundColor: '#ecf0f1',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      margin: '0',
-      boxSizing: 'border-box',
-    },
-    header: {
-      backgroundColor: '#3498db',
-      width: '100%',
-      padding: '20px',
-      display: 'flex',
-      alignItems: 'center', // Vertically centers items in the header
-      justifyContent: 'center', // Centers title horizontally
-      position: 'relative', // Establishes positioning context
-      boxSizing: 'border-box',
-    },
-    titleContainer: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '100%',
-      position: 'relative',
-    },
-    title: {
-      margin: '0',
-      fontSize: '2rem',
-      color: 'white',
-      textAlign: 'center',
-      flex: 1,
-    },
-    logoutButton: {
-      position: 'absolute',
-      right: '30px', // Distance from the right edge of the viewport
-      backgroundColor: '#ff4d4d',
-      color: 'white',
-      padding: '10px 20px',
-      border: 'none',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontWeight: 'bold',
-    },
-    content: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: '20px',
-      width: '100%',
-      boxSizing: 'border-box',
-    },
-    card: {
-      backgroundColor: 'white',
-      borderRadius: '8px',
-      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
-      padding: '20px',
-      position: 'relative',
-      transition: 'transform 0.2s ease, box-shadow 0.3s ease',
-      boxSizing: 'border-box',
-    },
-    cardHeader: {
-      fontSize: '1.2rem',
-      fontWeight: 'bold',
-      backgroundColor: '#3498db',
-      color: 'white',
-      padding: '10px',
-      borderRadius: '8px',
-    },
-    cardContent: {
-      marginTop: '10px',
-    },
-    backButton: {
-      marginTop: '20px',
-      backgroundColor: '#3498db',
-      color: 'white',
-      padding: '10px 20px',
-      border: 'none',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontWeight: 'bold',
-    },
-  };
-  
-  
-  
-  
+
+      <div style={{ ...styles.content, marginTop: '40px' }}> {/* Added marginTop here */}
+        {selectedPatient ? (
+          <PatientDetailedInfo patient={selectedPatient} />
+        ) : (
+          sortedPatients.map(([id, patient]) => (
+            <PatientCard 
+              key={id} 
+              patient={patient} 
+              onClick={() => setSelectedPatient(patient)}
+            />
+          ))
+        )}
+      </div>
+
+      {selectedPatient && (
+        <button
+          onClick={() => setSelectedPatient(null)}
+          style={styles.backButton}
+        >
+          <TranslatableText>Back to Dashboard</TranslatableText>
+        </button>
+      )}
+    </div>
+  );
+};
+
+// Styles
+const styles = {
+  dashboard: {
+    minHeight: '100vh',
+    width: '100vw',
+    backgroundColor: '#ecf0f1',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    margin: '0',
+    boxSizing: 'border-box',
+  },
+  header: {
+    backgroundColor: '#89CFF0',
+    width: '100%',
+    padding: '30px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    boxSizing: 'border-box',
+    borderBottomLeftRadius: '15px',
+    borderBottomRightRadius: '15px',
+    border: '1px solid #7ab8d9', // Added border
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', // Added shadow
+  },
+  titleContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    position: 'relative',
+  },
+  title: {
+    margin: '0',
+    fontSize: '2rem',
+    color: 'white',
+    textAlign: 'center',
+    flex: 1,
+  },
+  logoutButton: {
+    position: 'absolute',
+    right: '30px',
+    backgroundColor: '#3EB489',
+    color: 'white',
+    padding: '10px 20px',
+    border: '1px solid #35a07a', // Added border
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Added shadow
+  },
+  content: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '20px',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1)', // Updated shadow and added border
+    padding: '20px',
+    position: 'relative',
+    transition: 'transform 0.2s ease, box-shadow 0.3s ease',
+    boxSizing: 'border-box',
+  },
+  cardHeader: {
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    backgroundColor: '#89CFF0',
+    color: 'white',
+    padding: '10px',
+    borderRadius: '8px',
+    border: '1px solid #7ab8d9', // Added border
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Added shadow
+  },
+  cardContent: {
+    marginTop: '10px',
+  },
+  backButton: {
+    marginTop: '20px',
+    backgroundColor: '#89CFF0',
+    color: 'white',
+    padding: '10px 20px',
+    border: '1px solid #7ab8d9', // Added border
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Added shadow
+  },
+};
 
 export default PatientDashboard;
