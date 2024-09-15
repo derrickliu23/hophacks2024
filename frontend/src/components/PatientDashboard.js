@@ -13,11 +13,11 @@ const fetchAndFormatPatientsData = async () => {
       data.forEach(patient => {
         initialPatientsData[patient.id] = {
           name: patient.name || 'N/A',
-          idNumber: patient.idNumber || '0',
-          age: patient.age || '0',
+          idNumber: patient.idNumber || 0,
+          age: patient.age || 0,
           sexAtBirth: patient.sexAtBirth,
           personalInfo: {
-            age: patient.age || '0',
+            age: patient.age || 0,
             ID: patient.idNumber || 'N/A',
             contact: patient.personalInfo.contact || 'N/A',
           },
