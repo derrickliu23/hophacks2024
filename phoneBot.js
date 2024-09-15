@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { ChatOpenAI } = require("@langchain/openai");
 const { BufferMemory } = require("langchain/memory");
 const { ConversationChain } = require("langchain/chains");
@@ -10,6 +11,14 @@ const { RetrievalQA } = require("langchain/chains");
 const Twilio = require('twilio');
 const fs = require('fs');
 const pdf = require('pdf-parse');
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/medicalApp', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+const Patient = require('./models/patient'); // Assuming you saved the schema in models/patient.js
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -154,6 +163,18 @@ app.post('/voice', async (req, res) => {
       if (langChainResponse.includes("I will now hang up")) {
         twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);
         twiml.hangup(); // Hang up the call politely
+        const newPatient = new Patient({
+          name: patientData.name,
+          personalInfo: {
+            age: patientData.age,
+            gender: 'N/A', // You can capture this during the call
+            contact: 'N/A' // Placeholder for contact information
+          },
+          currentProblem: patientData.symptoms,
+          isUrgent: false // You can implement logic to detect urgency based on symptoms
+        });
+        await newPatient.save();
+        console.log('Patient data saved:', newPatient);
       } else {
         // Continue the conversation
         twiml.say({ voice: 'Polly.Joanne-Neural', language: 'en-US' }, langChainResponse);

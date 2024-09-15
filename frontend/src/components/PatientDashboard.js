@@ -88,7 +88,7 @@ const PatientCard = ({ patient, onClick }) => (
     {patient.isUrgent && <UrgentIndicator />}
     <div style={{
       ...styles.cardHeader,
-      backgroundColor: patient.isUrgent ? '#89CFF0' : styles.cardHeader.backgroundColor, // Red background for urgent cases
+      backgroundColor: patient.isUrgent ? '#FF0000' : styles.cardHeader.backgroundColor, // Red background for urgent cases
       color: patient.isUrgent ? 'white' : styles.cardHeader.color, // Ensure text is white on red background
     }}>
       {patient.name}
@@ -126,7 +126,42 @@ const PatientDetailedInfo = ({ patient }) => (
   const PatientDashboard = () => {
     const { logout } = useAuth0();
     const [selectedPatient, setSelectedPatient] = useState(null);
-  
+    /* useEffect(() => {
+        // Fetch patients from the backend
+        const fetchPatients = async () => {
+          try {
+            const response = await fetch('/api/patients');
+            const data = await response.json();
+            setPatients(data);
+            setLoading(false);
+          } catch (error) {
+            console.error('Error fetching patients:', error);
+            setLoading(false);
+          }
+        };
+    
+        fetchPatients();
+      }, []);
+    
+      if (loading) {
+        return <div>Loading...</div>;
+      }
+    
+      return (
+        <div>
+          <h1>Patient Dashboard</h1>
+          <div>
+            {patients.map(patient => (
+              <div key={patient._id} className="patient-card">
+                <h2>{patient.name}</h2>
+                <p>Age: {patient.personalInfo.age}</p>
+                <p>Symptoms: {patient.currentProblem}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+     */
     const sortedPatients = useMemo(() => {
       return Object.entries(patientsData).sort(([, a], [, b]) => {
         if (a.isUrgent === b.isUrgent) {
@@ -136,19 +171,6 @@ const PatientDetailedInfo = ({ patient }) => (
       });
     }, []);
 
-    /*
-     useEffect(() => {
-        const fetchPatients = async () => {
-          try {
-            const response = await axios.get('http://localhost:5000/patients');
-            setPatients(response.data);
-          } catch (err) {
-            console.error(err);
-          }
-        };
-        fetchPatients();
-    }, []);
-    */
   
     return (
       <div style={styles.dashboard}>
@@ -212,7 +234,7 @@ const PatientDetailedInfo = ({ patient }) => (
       boxSizing: 'border-box',
     },
     header: {
-      backgroundColor: '#89CFF0',
+      backgroundColor: '#3498db',
       width: '100%',
       padding: '20px',
       display: 'flex',
@@ -238,7 +260,7 @@ const PatientDetailedInfo = ({ patient }) => (
     logoutButton: {
       position: 'absolute',
       right: '30px', // Distance from the right edge of the viewport
-      backgroundColor: '#3EB489',
+      backgroundColor: '#ff4d4d',
       color: 'white',
       padding: '10px 20px',
       border: 'none',
@@ -265,7 +287,7 @@ const PatientDetailedInfo = ({ patient }) => (
     cardHeader: {
       fontSize: '1.2rem',
       fontWeight: 'bold',
-      backgroundColor: '#89CFF0',
+      backgroundColor: '#3498db',
       color: 'white',
       padding: '10px',
       borderRadius: '8px',
