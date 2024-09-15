@@ -12,15 +12,21 @@ const fetchAndFormatPatientsData = async () => {
       const initialPatientsData = {};
       data.forEach(patient => {
         initialPatientsData[patient.id] = {
-          name: patient.name,
+          name: patient.name || 'N/A',
+          idNumber: patient.idNumber || '0',
+          age: patient.age || '0',
+          sexAtBirth: patient.sexAtBirth,
           personalInfo: {
-            age: patient.personalInfo.age,
-            sex: patient.personalInfo.sex || 'N/A',
+            age: patient.age || '0',
+            ID: patient.idNumber || 'N/A',
             contact: patient.personalInfo.contact || 'N/A',
           },
+          summary: patient.summary || 'N/A',
+          symptoms: patient.symptoms || 'N/A',
+          transcript: patient.transcript || 'N/A',
           currentProblem: patient.currentProblem || 'N/A',
           isUrgent: patient.isUrgent || false,
-          isArchived: patient.isArchived || false
+          isArchived: false
         };
       });
       return initialPatientsData;
@@ -172,6 +178,9 @@ const PatientDetailedInfo = ({ patient, onArchive, onUnarchive }) => {
         <p><strong><TranslatableText>Medications:</TranslatableText></strong> <TranslatableText>Placeholder for current medications</TranslatableText></p>
         <p><strong><TranslatableText>Lab Results:</TranslatableText></strong> <TranslatableText>Placeholder for recent lab results</TranslatableText></p>
         <p><strong><TranslatableText>Treatment Plan:</TranslatableText></strong> <TranslatableText>Placeholder for current treatment plan</TranslatableText></p>
+        <p><strong><TranslatableText>Symptoms:</TranslatableText></strong> {patient.symptoms}</p>
+        <p><strong><TranslatableText>Summary of Call:</TranslatableText></strong> {patient.summary}</p>
+        <p><strong><TranslatableText>Transcript:</TranslatableText></strong> {patient.transcript}</p>
       </div>
       {showButton && (
         patient.isArchived ? (
