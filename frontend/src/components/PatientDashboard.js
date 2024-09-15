@@ -88,7 +88,7 @@ const PatientCard = ({ patient, onClick }) => (
     {patient.isUrgent && <UrgentIndicator />}
     <div style={{
       ...styles.cardHeader,
-      backgroundColor: patient.isUrgent ? '#89CFF0' : styles.cardHeader.backgroundColor, // Red background for urgent cases
+      backgroundColor: patient.isUrgent ? '#FF0000' : styles.cardHeader.backgroundColor, // Red background for urgent cases
       color: patient.isUrgent ? 'white' : styles.cardHeader.color, // Ensure text is white on red background
     }}>
       {patient.name}
@@ -102,15 +102,15 @@ const PatientCard = ({ patient, onClick }) => (
   </div>
 );
 
-const PatientDetailedInfo = ({ patient }) => (
-    <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '1000px', margin: '2rem auto', boxSizing: 'border-box' }}>
-      <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>
-        {patient.name} - <TranslatableText>Detailed Information</TranslatableText>
-      </h2>
-      <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age}</p>
-      <p><strong><TranslatableText>Gender:</TranslatableText></strong> {patient.personalInfo.gender}</p>
-      <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact}</p>
-      <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem}</p>
+const PatientDetailedInfo = ({ patient, onFinishPatient }) => (
+  <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '1000px', margin: '2rem auto', boxSizing: 'border-box', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', border: '1px solid #e0e0e0' }}>
+    <h2 style={{ color: '#3498db', marginBottom: '1rem' }}>
+      {patient.name} - <TranslatableText>Detailed Information</TranslatableText>
+    </h2>
+    <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age}</p>
+    <p><strong><TranslatableText>Gender:</TranslatableText></strong> {patient.personalInfo.gender}</p>
+    <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact}</p>
+    <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem}</p>
       <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f0f0', borderRadius: '8px', boxSizing: 'border-box' }}>
         <h3 style={{ color: '#3498db', marginBottom: '1rem' }}>
           <TranslatableText>Additional Details (Placeholder)</TranslatableText>
@@ -135,33 +135,20 @@ const PatientDetailedInfo = ({ patient }) => (
         return a.isUrgent ? -1 : 1;
       });
     }, []);
-
-    /*
-     useEffect(() => {
-        const fetchPatients = async () => {
-          try {
-            const response = await axios.get('http://localhost:5000/patients');
-            setPatients(response.data);
-          } catch (err) {
-            console.error(err);
-          }
-        };
-        fetchPatients();
-    }, []);
-    */
   
     return (
       <div style={styles.dashboard}>
+        {/* Header */}
         <div style={styles.header}>
           <div style={styles.titleContainer}>
-          <h1 style={styles.title}>
-            {selectedPatient ? (
+            <h1 style={styles.title}>
+              {selectedPatient ? (
                 <>
-                <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
+                  <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
                 </>
-            ) : (
+              ) : (
                 <TranslatableText>Patient Dashboard</TranslatableText>
-            )}
+              )}
             </h1>
             <button
               style={styles.logoutButton}
@@ -172,7 +159,8 @@ const PatientDetailedInfo = ({ patient }) => (
           </div>
         </div>
   
-        <div style={styles.content}>
+        {/* Content */}
+        <div style={{ ...styles.content, marginTop: '40px' }}> {/* Added marginTop here */}
           {selectedPatient ? (
             <PatientDetailedInfo patient={selectedPatient} />
           ) : (
@@ -180,23 +168,15 @@ const PatientDetailedInfo = ({ patient }) => (
               <PatientCard 
                 key={id} 
                 patient={patient} 
-                onClick={() => setSelectedPatient(patient)}
+                onClick={() => setSelectedPatient(patient)} 
               />
             ))
           )}
         </div>
-  
-        {selectedPatient && (
-          <button
-            onClick={() => setSelectedPatient(null)}
-            style={styles.backButton}
-          >
-            <TranslatableText>Back to Dashboard</TranslatableText>
-          </button>
-        )}
       </div>
     );
   };
+  
   
   //Styles
   const styles = {
@@ -212,7 +192,7 @@ const PatientDetailedInfo = ({ patient }) => (
       boxSizing: 'border-box',
     },
     header: {
-      backgroundColor: '#89CFF0',
+      backgroundColor: '#3498db',
       width: '100%',
       padding: '20px',
       display: 'flex',
@@ -238,7 +218,7 @@ const PatientDetailedInfo = ({ patient }) => (
     logoutButton: {
       position: 'absolute',
       right: '30px', // Distance from the right edge of the viewport
-      backgroundColor: '#3EB489',
+      backgroundColor: '#ff4d4d',
       color: 'white',
       padding: '10px 20px',
       border: 'none',
@@ -265,7 +245,7 @@ const PatientDetailedInfo = ({ patient }) => (
     cardHeader: {
       fontSize: '1.2rem',
       fontWeight: 'bold',
-      backgroundColor: '#89CFF0',
+      backgroundColor: '#3498db',
       color: 'white',
       padding: '10px',
       borderRadius: '8px',

@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { ChatOpenAI } = require("@langchain/openai");
 const { BufferMemory } = require("langchain/memory");
 const { ConversationChain } = require("langchain/chains");
@@ -13,6 +14,14 @@ process.env.OPENAI_API_KEY = 'sk-proj-C44UnzkJtbIz7_oouzKBSRWolRvfUA-IT6FAWHjm0H
 const Twilio = require('twilio');
 const fs = require('fs');
 const pdf = require('pdf-parse');
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/medicalApp', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+const Patient = require('./models/patient'); // Assuming you saved the schema in models/patient.js
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -135,6 +144,18 @@ app.post('/voice', async (req, res) => {
       if (langChainResponse.toLowerCase().includes("end the call") || langChainResponse.toLowerCase().includes("hang up")) {
         twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
         twiml.hangup();
+        const newPatient = new Patient({
+          name: patientData.name,
+          personalInfo: {
+            age: patientData.age,
+            gender: 'N/A', // You can capture this during the call
+            contact: 'N/A' // Placeholder for contact information
+          },
+          currentProblem: patientData.symptoms,
+          isUrgent: false // You can implement logic to detect urgency based on symptoms
+        });
+        await newPatient.save();
+        console.log('Patient data saved:', newPatient);
       } else {
         twiml.say({ voice: 'alice', language: 'en-US' }, langChainResponse);
         const gather = twiml.gather({
