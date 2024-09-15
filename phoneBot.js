@@ -88,8 +88,66 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "{history}"]
 ]);
 
+function isValidNumber(value) {
+  return !isNaN(value) && Number.isInteger(Number(value));
+}
+
+async function interpretSexAtBirth(userInput) {
+  const prompt = `
+    Based on the following input, take a best guess to determine if the person is indicating 'male' or 'female' as their sex at birth. Think about whether the word they inputted sounds more like male or female when pronounced.
+    If the input really unclear and you have no way of guessing, respond with 'unclear'.
+    
+    Input: "${userInput}"
+    
+    Respond with only one word: 'male', 'female', or 'unclear'.
+  `;
+
+  try {
+    const response = await model.call([
+      { role: "system", content: "You are an AI assistant interpreting patient inputs." },
+      { role: "user", content: prompt }
+    ]);
+
+    const interpretation = response.content.trim().toLowerCase();
+    return ['male', 'female'].includes(interpretation) ? interpretation : 'unclear';
+  } catch (error) {
+    console.error('Error interpreting sex at birth:', error);
+    return 'unclear';
+  }
+}
+
+function getQuestionForInvalidInput(stage) {
+  switch (stage) {
+    case 'age':
+      return "I'm sorry, but the age you provided is not valid. Please provide your age as a number.";
+    case 'id':
+      return "I'm sorry, but the ID you provided is not valid. Please provide your ID as a number.";
+    case 'sexAtBirth':
+      return "I'm sorry, but I couldn't determine your sex at birth from that response. Could you please specify either 'male' or 'female'?";
+    default:
+      return "I'm sorry, but the information you provided is not valid. Could you please try again?";
+  }
+}
+
 async function handleUserInput(userInput) {
   console.log('Handling user input:', userInput);
+
+  // Check if the current stage requires validation
+  if (conversationState.stage === 'age' || conversationState.stage === 'id') {
+    if (!isValidNumber(userInput)) {
+      const retryQuestion = getQuestionForInvalidInput(conversationState.stage);
+      conversationState.conversationHistory += "\nPatient: " + userInput + "\nAI: " + retryQuestion;
+      return retryQuestion;
+    }
+  } else if (conversationState.stage === 'sexAtBirth') {
+    const interpretedSex = await interpretSexAtBirth(userInput);
+    if (interpretedSex === 'unclear') {
+      const retryQuestion = getQuestionForInvalidInput('sexAtBirth');
+      conversationState.conversationHistory += "\nPatient: " + userInput + "\nAI: " + retryQuestion;
+      return retryQuestion;
+    }
+    userInput = interpretedSex; // Use the interpreted sex for updating the conversation state
+  }
 
   updateConversationState(userInput);
 
@@ -122,7 +180,6 @@ async function handleUserInput(userInput) {
     return "I'm sorry, but I encountered an error processing your request. Could you please repeat that?";
   }
 }
-
 
 function updateConversationState(userInput) {
   console.log('Updating conversation state with:', userInput);
