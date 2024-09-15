@@ -126,42 +126,7 @@ const PatientDetailedInfo = ({ patient, onFinishPatient }) => (
   const PatientDashboard = () => {
     const { logout } = useAuth0();
     const [selectedPatient, setSelectedPatient] = useState(null);
-    /* useEffect(() => {
-        // Fetch patients from the backend
-        const fetchPatients = async () => {
-          try {
-            const response = await fetch('/api/patients');
-            const data = await response.json();
-            setPatients(data);
-            setLoading(false);
-          } catch (error) {
-            console.error('Error fetching patients:', error);
-            setLoading(false);
-          }
-        };
-    
-        fetchPatients();
-      }, []);
-    
-      if (loading) {
-        return <div>Loading...</div>;
-      }
-    
-      return (
-        <div>
-          <h1>Patient Dashboard</h1>
-          <div>
-            {patients.map(patient => (
-              <div key={patient._id} className="patient-card">
-                <h2>{patient.name}</h2>
-                <p>Age: {patient.personalInfo.age}</p>
-                <p>Symptoms: {patient.currentProblem}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-     */
+  
     const sortedPatients = useMemo(() => {
       return Object.entries(patientsData).sort(([, a], [, b]) => {
         if (a.isUrgent === b.isUrgent) {
@@ -170,20 +135,20 @@ const PatientDetailedInfo = ({ patient, onFinishPatient }) => (
         return a.isUrgent ? -1 : 1;
       });
     }, []);
-
   
     return (
       <div style={styles.dashboard}>
+        {/* Header */}
         <div style={styles.header}>
           <div style={styles.titleContainer}>
-          <h1 style={styles.title}>
-            {selectedPatient ? (
+            <h1 style={styles.title}>
+              {selectedPatient ? (
                 <>
-                <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
+                  <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
                 </>
-            ) : (
+              ) : (
                 <TranslatableText>Patient Dashboard</TranslatableText>
-            )}
+              )}
             </h1>
             <button
               style={styles.logoutButton}
@@ -194,39 +159,24 @@ const PatientDetailedInfo = ({ patient, onFinishPatient }) => (
           </div>
         </div>
   
-        <div style={styles.content}>
+        {/* Content */}
+        <div style={{ ...styles.content, marginTop: '40px' }}> {/* Added marginTop here */}
           {selectedPatient ? (
-              <>
-              <TranslatableText>Patient Details:</TranslatableText> {selectedPatient.name}
-              </>
+            <PatientDetailedInfo patient={selectedPatient} />
           ) : (
-              <TranslatableText>Patient Dashboard</TranslatableText>
+            sortedPatients.map(([id, patient]) => (
+              <PatientCard 
+                key={id} 
+                patient={patient} 
+                onClick={() => setSelectedPatient(patient)} 
+              />
+            ))
           )}
-          </h1>
-          <button
-            style={styles.logoutButton}
-            onClick={() => logout({ returnTo: window.location.origin })}
-          >
-            <TranslatableText>Log Out</TranslatableText>
-          </button>
         </div>
-      </div>
-
-      <div style={{ ...styles.content, marginTop: '40px' }}> {/* Added marginTop here */}
-        {selectedPatient ? (
-          <PatientDetailedInfo patient={selectedPatient} />
-        ) : (
-          sortedPatients.map(([id, patient]) => (
-            <PatientCard 
-              key={id} 
-              patient={patient} 
-              onClick={() => setSelectedPatient(patient)}
-            />
-          ))
-        )}
       </div>
     );
   };
+  
   
   //Styles
   const styles = {
