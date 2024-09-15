@@ -16,7 +16,7 @@ root.render(
         domain: "dev-o8axeyog85h8xeej.us.auth0.com",
         clientId: "olUFl5B3XEN7nascxLeYjsiD4OeAZE8S",
         authorizationParams: {
-          redirect_uri: "http://localhost:3000"
+          redirect_uri: "http://localhost:3001"
         }
       },
       React.createElement(

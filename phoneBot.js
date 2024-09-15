@@ -63,7 +63,8 @@ let conversationState = {
   patientData: {},
   discussedTopics: new Set(),
   questionCount: 0,
-  conversationHistory: ''
+  conversationHistory: '',
+  phoneNumber: ''
 };
 
 const defaultQuestions = {
@@ -220,7 +221,7 @@ async function concludeConversation() {
     personalInfo: {
       age: age,
       ID: conversationState.patientData.id,
-      contact: 'N/A'
+      contact: conversationState.phoneNumber // Add this line to save the phone number
     },
     symptoms: conversationState.patientData.symptoms,
     transcript: conversationState.conversationHistory.split('\n'),
@@ -271,9 +272,16 @@ app.post('/voice', async (req, res) => {
   console.log('Request body:', req.body);
   const twiml = new Twilio.twiml.VoiceResponse();
   const speechResult = req.body.SpeechResult;
-
+  
+  // Capture the caller's phone number
+  const callerPhoneNumber = req.body.From;
+  
   if (!speechResult) {
     // Initial greeting
+    // Store the phone number in the conversation state
+    conversationState.phoneNumber = callerPhoneNumber;
+    console.log('Caller phone number:', callerPhoneNumber);
+    
     twiml.say({ voice: 'alice', language: 'en-US' }, defaultQuestions.name);
     twiml.gather({
       input: 'speech',

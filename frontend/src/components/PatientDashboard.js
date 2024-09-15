@@ -24,7 +24,6 @@ const fetchAndFormatPatientsData = async () => {
           summary: patient.summary || 'N/A',
           symptoms: patient.symptoms || 'N/A',
           transcript: patient.transcript || 'N/A',
-          currentProblem: patient.currentProblem || 'N/A',
           isUrgent: patient.isUrgent || false,
           isArchived: false
         };
@@ -140,9 +139,9 @@ const PatientCard = ({ patient, onClick }) => {
       </div>
       <div style={styles.cardContent}>
         <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age || <TranslatableText>Unknown</TranslatableText>}</p>
-        <p><strong><TranslatableText>Sex:</TranslatableText></strong> {patient.personalInfo.sex || <TranslatableText>Unknown</TranslatableText>}</p>
+        <p><strong><TranslatableText>Sex:</TranslatableText></strong> {patient.sexAtBirth || <TranslatableText>Unknown</TranslatableText>}</p>
         <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact || <TranslatableText>Unknown</TranslatableText>}</p>
-        <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem || <TranslatableText>No information available</TranslatableText>}</p>
+        <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.symptoms || <TranslatableText>No information available</TranslatableText>}</p>
       </div>
     </div>
   );
@@ -167,18 +166,16 @@ const PatientDetailedInfo = ({ patient, onArchive, onUnarchive }) => {
         {patient.name} - <TranslatableText>Detailed Information</TranslatableText>
       </h2>
       <p><strong><TranslatableText>Age:</TranslatableText></strong> {patient.personalInfo.age}</p>
-      <p><strong><TranslatableText>Sex:</TranslatableText></strong> {patient.personalInfo.sex}</p>
+      <p><strong><TranslatableText>Sex:</TranslatableText></strong> {patient.sexAtBirth}</p>
       <p><strong><TranslatableText>Contact:</TranslatableText></strong> {patient.personalInfo.contact}</p>
-      <p><strong><TranslatableText>Current Problem:</TranslatableText></strong> {patient.currentProblem}</p>
+      <p><strong><TranslatableText>Symptoms:</TranslatableText></strong> {patient.symptoms}</p>
       <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f0f0', borderRadius: '8px', boxSizing: 'border-box' }}>
         <h3 style={{ color: '#3498db', marginBottom: '1rem' }}>
           <TranslatableText>Additional Details (Placeholder)</TranslatableText>
         </h3>
         <p><strong><TranslatableText>Medical History:</TranslatableText></strong> <TranslatableText>Placeholder for detailed medical history</TranslatableText></p>
         <p><strong><TranslatableText>Medications:</TranslatableText></strong> <TranslatableText>Placeholder for current medications</TranslatableText></p>
-        <p><strong><TranslatableText>Lab Results:</TranslatableText></strong> <TranslatableText>Placeholder for recent lab results</TranslatableText></p>
-        <p><strong><TranslatableText>Treatment Plan:</TranslatableText></strong> <TranslatableText>Placeholder for current treatment plan</TranslatableText></p>
-        <p><strong><TranslatableText>Symptoms:</TranslatableText></strong> {patient.symptoms}</p>
+        <p><strong><TranslatableText>Treatment Plan:</TranslatableText></strong> <TranslatableText>Placeholder for current treatment plan</TranslatableText></p> 
         <p><strong><TranslatableText>Summary of Call:</TranslatableText></strong> {patient.summary}</p>
         <p><strong><TranslatableText>Transcript:</TranslatableText></strong> {patient.transcript}</p>
       </div>
