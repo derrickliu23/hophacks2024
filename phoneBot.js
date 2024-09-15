@@ -6,7 +6,7 @@ const { ConversationChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
 const { OpenAIEmbeddings } = require("@langchain/openai");
-const { Chroma } = require("@langchain/community/vectorstores/chroma");
+const { MemoryVectorStore } = require("langchain/vectorstores/memory");
 const { RetrievalQAChain } = require("langchain/chains");
 
 process.env.OPENAI_API_KEY = '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';
@@ -15,13 +15,11 @@ const Twilio = require('twilio');
 const fs = require('fs');
 const pdf = require('pdf-parse');
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/medicalApp', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+mongoose.connect('mongodb://localhost:27017/medicalApp', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Error connecting to MongoDB:', err));
 
-const Patient = require('./models/patient'); // Assuming you saved the schema in models/patient.js
+const Patient = require('./backend/models/patient');
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -41,18 +39,14 @@ async function processMedicalTextbook() {
 
   const embeddings = new OpenAIEmbeddings();
   
-  vectorStore = await Chroma.fromTexts(splits, splits, embeddings, {
-    collectionName: "medical_textbook",
-    numDimensions: 1536
-  });
+  vectorStore = await MemoryVectorStore.fromTexts(splits, splits, embeddings);
+  return vectorStore;
 }
-
-processMedicalTextbook();
 
 const systemMessage = "You are an AI assistant conducting patient assessments. Use the medical textbook information to ask appropriate questions about the patient's symptoms, medical history, and current condition. Ask no more than one question at a time. Your goal is to gather comprehensive information to assist in diagnosis and treatment planning. Once you have gathered all relevant information, offer to end the call.";
 
 const model = new ChatOpenAI({
-  openAIApiKey: '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',
+  openAIApiKey: process.env.OPENAI_API_KEY,
   modelName: "gpt-4-turbo",
   temperature: 0.7,
 });
@@ -80,6 +74,7 @@ let patientData = {
   age: null,
   idNumber: null,
   symptoms: null,
+  loopCount: 0,
 };
 
 let discussedTopics = new Set();
@@ -95,7 +90,6 @@ async function queryLangChain(userInput) {
       return `Thank you. Can you please tell me your age?`;
     }
 
-    // Check if we already have collected the patient's age
     if (!patientData.age) {
       patientData.age = userInput;
       return `Thanks! Could you please provide your ID number?`;
@@ -106,24 +100,25 @@ async function queryLangChain(userInput) {
       return `Thanks for that information! Now, can you describe any symptoms you're experiencing?`;
     }
 
-    // After collecting name, age, and ID number, move on to symptoms
     if (!patientData.symptoms) {
       patientData.symptoms = userInput;
       return `Thank you for sharing your symptoms. Let's continue. How long have you been experiencing these symptoms?`;
     }
 
-    // Check if the conversation is looping
     if (userInput.toLowerCase().includes(patientData.symptoms.toLowerCase())) {
       patientData.loopCount++;
     }
 
-    // End the call if a loop is detected (e.g., repeated symptoms question)
     if (patientData.loopCount >= 2) {
       return `It seems we have covered everything. Thank you for your time. I will now hang up. Have a great day!`;
     }
 
+    // Use the vector store to find relevant information
+    const relevantDocs = await vectorStore.similaritySearch(userInput, 1);
+    const relevantInfo = relevantDocs[0].pageContent;
+
     const response = await chain.call({
-      input: userInput
+      input: `${userInput}\n\nRelevant medical information: ${relevantInfo}`
     });
     console.log('Assistant response:', response.response);
     return response.response;
@@ -148,11 +143,11 @@ app.post('/voice', async (req, res) => {
           name: patientData.name,
           personalInfo: {
             age: patientData.age,
-            ID: patientData.idNumber, // You can capture this during the call
-            contact: 'N/A' // Placeholder for contact information
+            ID: patientData.idNumber,
+            contact: 'N/A'
           },
           currentProblem: patientData.symptoms,
-          isUrgent: false // You can implement logic to detect urgency based on symptoms
+          isUrgent: false
         });
         await newPatient.save();
         console.log('Patient data saved:', newPatient);
@@ -183,17 +178,27 @@ app.post('/voice', async (req, res) => {
   res.end(twiml.toString());
 });
 
-app.post('/call-status', (req, res) => {
+app.post('/call-status', async (req, res) => {
   const callSid = req.body.CallSid;
   const callStatus = req.body.CallStatus;
   console.log(`Call ${callSid} ended with status: ${callStatus}`);
 
-  // Perform cleanup operations
   if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {
-    clearConversationMemory(callSid);
+    const newPatient = new Patient({
+      name: patientData.name,
+      personalInfo: {
+        age: patientData.age,
+        ID: patientData.idNumber,
+        contact: 'N/A'
+      },
+      currentProblem: patientData.symptoms,
+      isUrgent: false
+    });
+    await newPatient.save();
+    console.log('Patient data saved:', newPatient);
     logCallDetails(callSid, callStatus);
+    clearConversationMemory(callSid);
     
-    // Print out the patient data after the call ends
     console.log('Recorded Patient Data:', patientData);
   }
 
@@ -207,6 +212,7 @@ function clearConversationMemory(callSid) {
     age: null,
     idNumber: null,
     symptoms: null,
+    loopCount: 0,
   };
   discussedTopics.clear();
   conversationStage = 0;
@@ -218,6 +224,17 @@ function logCallDetails(callSid, callStatus) {
 }
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`App listening at http://localhost:${port}`);
-});
+
+// Wrap the server start in an async function
+(async () => {
+  try {
+    await processMedicalTextbook();
+    console.log('Medical textbook processed and added to in-memory vector store');
+    
+    app.listen(port, () => {
+      console.log(`App listening at http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error('Error processing medical textbook:', error);
+  }
+})();
