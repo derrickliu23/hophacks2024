@@ -1,3 +1,11 @@
+# Getting Twilio set up 
+
+# Setting up Ngrok 
+
+Use the terminal command ngrok http 3000 to set up the server. Then, copy-paste the link "https://7e93-128-220-159-210.ngrok-free.app" to the configure window of the chatbot phone number. 
+
+Run the phoneBot with the command “node phoneBot”
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -68,3 +76,5 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
