@@ -1,0 +1,1 @@
+process.env.OPENAI_API_KEY = "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"==>"process.env.OPENAI_API_KEY = "" 
