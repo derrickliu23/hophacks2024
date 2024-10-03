@@ -9,7 +9,7 @@ const fs = require('fs');
 const pdf = require('pdf-parse');
 const admin = require('firebase-admin');
 
-process.env.OPENAI_API_KEY = ''
+//process.env.OPENAI_API_KEY = ''
 const model = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
   modelName: "gpt-4-turbo",
