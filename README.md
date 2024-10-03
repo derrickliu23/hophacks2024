@@ -2,7 +2,7 @@
 
 # Setting up Ngrok 
 
-Use the terminal command ngrok http 3000 to set up the server. Then, copy-paste the link "https://7e93-128-220-159-210.ngrok-free.app" to the configure window of the chatbot phone number. 
+Use the terminal command ngrok http 3000 to set up the server. Then, copy-paste the link "https://7e93-128-220-159-210.ngrok-free.app" to the configure window of the chatbot phone number. If necessary, add the phone number you're calling in from to the list of verified caller IDs in Twilio. 
 
 Run the phoneBot with the command “node phoneBot”
 
